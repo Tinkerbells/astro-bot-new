@@ -12,8 +12,8 @@ importers:
         specifier: 0.1.1
         version: 0.1.1(grammy@1.35.0)
       '@grammyjs/commands':
-        specifier: 1.0.5
-        version: 1.0.5(grammy@1.35.0)
+        specifier: 1.2.0
+        version: 1.2.0(grammy@1.35.0)
       '@grammyjs/conversations':
         specifier: ^2.1.0
         version: 2.1.0(grammy@1.35.0)
@@ -425,8 +425,8 @@ packages:
     peerDependencies:
       grammy: ^1.0.0
 
-  '@grammyjs/commands@1.0.5':
-    resolution: {integrity: sha512-7CiI63Ye5ysdqhwQV7cEFZGQOWJLDPJSoOAeIqI+SXIlwvTjqSRSlTG2e4OfhgF2t/3G3OdC5bPrZb7oQkYfBw==}
+  '@grammyjs/commands@1.2.0':
+    resolution: {integrity: sha512-np3uZElWtVIQk8w73szBXcubuKFOEGnp+4dHyhw+KeVsN/yVwuaEAxt+kyEhfTUQdNH0zU7ffuCM2l7lVUDBWw==}
     peerDependencies:
       grammy: ^1.17.1
 
@@ -2478,7 +2478,7 @@ snapshots:
     dependencies:
       grammy: 1.35.0
 
-  '@grammyjs/commands@1.0.5(grammy@1.35.0)':
+  '@grammyjs/commands@1.2.0(grammy@1.35.0)':
     dependencies:
       grammy: 1.35.0
 
