@@ -1,6 +1,6 @@
+import * as v from 'valibot'
 import process from 'node:process'
 import { API_CONSTANTS } from 'grammy'
-import * as v from 'valibot'
 
 const baseConfigSchema = v.object({
   debug: v.optional(v.pipe(v.string(), v.transform(JSON.parse), v.boolean()), 'false'),
@@ -8,6 +8,7 @@ const baseConfigSchema = v.object({
   botToken: v.pipe(v.string(), v.regex(/^\d+:[\w-]+$/, 'Invalid token')),
   botAllowedUpdates: v.optional(v.pipe(v.string(), v.transform(JSON.parse), v.array(v.picklist(API_CONSTANTS.ALL_UPDATE_TYPES))), '[]'),
   botAdmins: v.optional(v.pipe(v.string(), v.transform(JSON.parse), v.array(v.number())), '[]'),
+  redisUrl: v.optional(v.string(), 'redis://localhost:6379/0'),
 })
 
 const configSchema = v.variant('botMode', [

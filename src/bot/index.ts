@@ -1,22 +1,26 @@
-import type { Context } from '#root/bot/context.js'
-import type { Config } from '#root/config.js'
-import type { Logger } from '#root/logger.js'
 import type { BotConfig } from 'grammy'
-import { adminFeature } from '#root/bot/features/admin.js'
-import { languageFeature } from '#root/bot/features/language.js'
-import { unhandledFeature } from '#root/bot/features/unhandled.js'
-import { welcomeFeature } from '#root/bot/features/welcome.js'
+import type { Config } from '#root/shared/config.js'
+import type { Logger } from '#root/shared/logger.js'
+import type { Context, SessionData } from '#root/bot/context.js'
+
+import { hydrate } from '@grammyjs/hydrate'
+import { Bot as TelegramBot } from 'grammy'
+import { sequentialize } from '@grammyjs/runner'
+import { RedisAdapter } from '@grammyjs/storage-redis'
+import { conversations } from '@grammyjs/conversations'
+import { createRedisClient } from '#root/shared/index.js'
 import { errorHandler } from '#root/bot/handlers/error.js'
 import { i18n, isMultipleLocales } from '#root/bot/i18n.js'
-import { session } from '#root/bot/middlewares/session.js'
-import { updateLogger } from '#root/bot/middlewares/update-logger.js'
 import { autoChatAction } from '@grammyjs/auto-chat-action'
-import { hydrate } from '@grammyjs/hydrate'
 import { hydrateReply, parseMode } from '@grammyjs/parse-mode'
-import { sequentialize } from '@grammyjs/runner'
-import { MemorySessionStorage, Bot as TelegramBot } from 'grammy'
+import { adminFeature } from '#root/bot/features/admin/index.js'
+import { session } from '#root/bot/shared/middlewares/session.js'
+import { languageFeature } from '#root/bot/features/language/index.js'
+import { unhandledFeature } from '#root/bot/features/unhandled/index.js'
+import { updateLogger } from '#root/bot/shared/middlewares/update-logger.js'
+import { greetingConversation, onboardingFeature } from '#root/bot/features/onboarding/index.js'
 
-interface Dependencies {
+type Dependencies = {
   config: Config
   logger: Logger
 }
@@ -51,17 +55,23 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
     protectedBot.use(sequentialize(getSessionKey))
   if (config.isDebug)
     protectedBot.use(updateLogger())
+  // protectedBot.use(ignoreOld())
   protectedBot.use(autoChatAction(bot.api))
   protectedBot.use(hydrateReply)
   protectedBot.use(hydrate())
   protectedBot.use(session({
     getSessionKey,
-    storage: new MemorySessionStorage(),
+    storage: new RedisAdapter<SessionData>({
+      instance: createRedisClient(config.redisUrl),
+      ttl: 10800, // 3 hours
+    }),
   }))
   protectedBot.use(i18n)
+  protectedBot.use(conversations())
+  protectedBot.use(greetingConversation())
 
   // Handlers
-  protectedBot.use(welcomeFeature)
+  protectedBot.use(onboardingFeature)
   protectedBot.use(adminFeature)
   if (isMultipleLocales)
     protectedBot.use(languageFeature)

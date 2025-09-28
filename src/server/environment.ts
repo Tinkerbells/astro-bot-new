@@ -1,6 +1,6 @@
-import type { Logger } from '#root/logger.js'
+import type { Logger } from '#root/shared/logger.js'
 
-export interface Env {
+export type Env = {
   Variables: {
     requestId: string
     logger: Logger

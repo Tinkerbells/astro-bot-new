@@ -1,17 +1,18 @@
 import type { Bot } from '#root/bot/index.js'
-import type { Config } from '#root/config.js'
-import type { Logger } from '#root/logger.js'
+import type { Config } from '#root/shared/config.js'
+import type { Logger } from '#root/shared/logger.js'
 import type { Env } from '#root/server/environment.js'
+
+import { Hono } from 'hono'
+import { webhookCallback } from 'grammy'
+import { getPath } from 'hono/utils/url'
+import { serve } from '@hono/node-server'
+import { HTTPException } from 'hono/http-exception'
 import { setLogger } from '#root/server/middlewares/logger.js'
 import { requestId } from '#root/server/middlewares/request-id.js'
 import { requestLogger } from '#root/server/middlewares/request-logger.js'
-import { serve } from '@hono/node-server'
-import { webhookCallback } from 'grammy'
-import { Hono } from 'hono'
-import { HTTPException } from 'hono/http-exception'
-import { getPath } from 'hono/utils/url'
 
-interface Dependencies {
+type Dependencies = {
   bot: Bot
   config: Config
   logger: Logger
