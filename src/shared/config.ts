@@ -9,6 +9,8 @@ const baseConfigSchema = v.object({
   botAllowedUpdates: v.optional(v.pipe(v.string(), v.transform(JSON.parse), v.array(v.picklist(API_CONSTANTS.ALL_UPDATE_TYPES))), '[]'),
   botAdmins: v.optional(v.pipe(v.string(), v.transform(JSON.parse), v.array(v.number())), '[]'),
   redisUrl: v.optional(v.string(), 'redis://localhost:6379/0'),
+  backendUrl: v.optional(v.string(), 'http://localhost:3000/api/'),
+  hmacSecret: v.string(),
 })
 
 const configSchema = v.variant('botMode', [

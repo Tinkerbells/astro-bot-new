@@ -17,7 +17,7 @@ export default antfu(
       'ts/no-use-before-define': ['warn'],
       'perfectionist/sort-imports': ['error', {
         type: 'line-length',
-        internalPattern: ['^@/.+'],
+        internalPattern: ['^#root/.+'],
       }],
       'unicorn/filename-case': [
         'error',

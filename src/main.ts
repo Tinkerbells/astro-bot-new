@@ -2,10 +2,12 @@
 /* eslint-disable antfu/no-top-level-await */
 
 import type { RunnerHandle } from '@grammyjs/runner'
-import type { PollingConfig, WebhookConfig } from '#root/shared/config.js'
 
 import process from 'node:process'
 import { run } from '@grammyjs/runner'
+
+import type { PollingConfig, WebhookConfig } from '#root/shared/config.js'
+
 import { createBot } from '#root/bot/index.js'
 import { config } from '#root/shared/config.js'
 import { logger } from '#root/shared/logger.js'

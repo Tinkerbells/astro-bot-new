@@ -1,6 +1,7 @@
+import { Composer } from 'grammy'
+
 import type { Context } from '#root/bot/context.js'
 
-import { Composer } from 'grammy'
 import { i18n } from '#root/bot/i18n.js'
 import { logHandle } from '#root/bot/shared/helpers/logging.js'
 

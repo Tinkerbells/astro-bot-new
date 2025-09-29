@@ -1,11 +1,12 @@
 import type { I18nFlavor } from '@grammyjs/i18n'
-import type { Config } from '#root/shared/config.js'
-import type { Logger } from '#root/shared/logger.js'
 import type { HydrateFlavor } from '@grammyjs/hydrate'
 import type { ParseModeFlavor } from '@grammyjs/parse-mode'
 import type { ConversationFlavor } from '@grammyjs/conversations'
 import type { AutoChatActionFlavor } from '@grammyjs/auto-chat-action'
 import type { Context as DefaultContext, SessionFlavor } from 'grammy'
+
+import type { Config } from '#root/shared/config.js'
+import type { Logger } from '#root/shared/logger.js'
 
 export type SessionData = Record<string, unknown>
 

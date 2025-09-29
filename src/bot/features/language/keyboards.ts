@@ -1,7 +1,8 @@
-import type { Context } from '#root/bot/context.js'
-
 import ISO6391 from 'iso-639-1'
 import { InlineKeyboard } from 'grammy'
+
+import type { Context } from '#root/bot/context.js'
+
 import { i18n } from '#root/bot/i18n.js'
 import { chunk } from '#root/bot/shared/helpers/keyboard.js'
 

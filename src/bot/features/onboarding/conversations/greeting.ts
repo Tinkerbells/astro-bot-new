@@ -1,8 +1,9 @@
-import type { Context } from '#root/bot/context.js'
 import type { Context as DefaultContext } from 'grammy'
 import type { Conversation } from '@grammyjs/conversations'
 
 import { createConversation } from '@grammyjs/conversations'
+
+import type { Context } from '#root/bot/context.js'
 
 export const GREETING_CONVERSATION = 'greeting'
 

@@ -1,8 +1,8 @@
-import type { Context } from '#root/bot/context.js'
-
 import path from 'node:path'
 import process from 'node:process'
 import { I18n } from '@grammyjs/i18n'
+
+import type { Context } from '#root/bot/context.js'
 
 export const i18n = new I18n<Context>({
   defaultLocale: 'en',

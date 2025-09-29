@@ -1,4 +1,5 @@
 import type { ErrorHandler } from 'grammy'
+
 import type { Context } from '#root/bot/context.js'
 
 import { getUpdateInfo } from '#root/bot/shared/helpers/logging.js'
