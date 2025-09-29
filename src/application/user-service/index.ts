@@ -1,1 +1,1 @@
-export { createUserService, UserService, type UserStore } from './user-service.js'
+export { createUserService, UserService } from './user-service.js'

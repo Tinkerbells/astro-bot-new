@@ -8,7 +8,7 @@ export function requestLogger(): MiddlewareHandler {
     const path = getPath(c.req.raw)
 
     c.var.logger.debug({
-      msg: 'Incoming request',
+      msg: 'Входящий запрос',
       method,
       path,
     })
@@ -18,7 +18,7 @@ export function requestLogger(): MiddlewareHandler {
 
     const endTime = performance.now()
     c.var.logger.debug({
-      msg: 'Request completed',
+      msg: 'Запрос обработан',
       method,
       path,
       status: c.res.status,

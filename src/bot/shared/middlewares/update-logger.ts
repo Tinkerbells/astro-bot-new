@@ -10,7 +10,7 @@ export function updateLogger(): Middleware<Context> {
   return async (ctx, next) => {
     ctx.api.config.use((previous, method, payload, signal) => {
       ctx.logger.debug({
-        msg: 'Bot API call',
+        msg: 'Вызов Bot API',
         method,
         payload,
       })
@@ -19,7 +19,7 @@ export function updateLogger(): Middleware<Context> {
     })
 
     ctx.logger.debug({
-      msg: 'Update received',
+      msg: 'Обновление получено',
       update: getUpdateInfo(ctx),
     })
 
@@ -30,7 +30,7 @@ export function updateLogger(): Middleware<Context> {
     finally {
       const endTime = performance.now()
       ctx.logger.debug({
-        msg: 'Update processed',
+        msg: 'Обновление обработано',
         elapsed: endTime - startTime,
       })
     }

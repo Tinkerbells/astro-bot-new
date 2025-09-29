@@ -51,7 +51,7 @@ export function createServer(dependencies: Dependencies) {
     })
     return c.json(
       {
-        error: 'Oops! Something went wrong.',
+        error: 'Упс! Что-то пошло не так.',
       },
       500,
     )

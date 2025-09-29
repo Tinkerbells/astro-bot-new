@@ -20,8 +20,8 @@ import { adminFeature } from '#root/bot/features/admin/index.js'
 import { session } from '#root/bot/shared/middlewares/session.js'
 import { languageFeature } from '#root/bot/features/language/index.js'
 import { unhandledFeature } from '#root/bot/features/unhandled/index.js'
-import { createUserMiddleware } from '#root/bot/shared/middlewares/user.js'
 import { updateLogger } from '#root/bot/shared/middlewares/update-logger.js'
+import { createUserSessionMiddleware } from '#root/bot/shared/middlewares/user.js'
 import { greetingConversation, onboardingFeature } from '#root/bot/features/onboarding/index.js'
 
 type Dependencies = {
@@ -30,8 +30,9 @@ type Dependencies = {
   userService: UserService
 }
 
-function getSessionKey(ctx: Omit<Context, 'session'>) {
-  return ctx.chat?.id.toString()
+function getUserSessionKey(ctx: Omit<Context, 'session'>) {
+  // Храним данные по каждому пользователю отдельно для персистентности
+  return ctx.from?.id.toString()
 }
 
 export function createBot(token: string, dependencies: Dependencies, botConfig?: BotConfig<Context>) {
@@ -58,7 +59,7 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
   bot.api.config.use(parseMode('HTML'))
 
   if (config.isPollingMode)
-    protectedBot.use(sequentialize(getSessionKey))
+    protectedBot.use(sequentialize(getUserSessionKey))
   if (config.isDebug)
     protectedBot.use(updateLogger())
   // protectedBot.use(ignoreOld())
@@ -66,14 +67,19 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
   protectedBot.use(hydrateReply)
   protectedBot.use(hydrate())
   protectedBot.use(session({
-    getSessionKey,
+    getSessionKey: getUserSessionKey,
+    initial: (): SessionData => {
+      // Начальное значение будет переопределено в user middleware
+      // Но TypeScript требует обязательное поле user
+      return {} as SessionData
+    },
     storage: new RedisAdapter<SessionData>({
       instance: createRedisClient(config.redisUrl),
-      ttl: 10800, // 3 hours
+      ttl: 86400, // 24 часа для пользовательских данных
     }),
   }))
   protectedBot.use(i18n)
-  protectedBot.use(createUserMiddleware(userService))
+  protectedBot.use(createUserSessionMiddleware(userService))
   protectedBot.use(conversations())
   protectedBot.use(greetingConversation())
 

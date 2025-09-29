@@ -4,12 +4,12 @@ import { session as createSession } from 'grammy'
 
 import type { Context, SessionData } from '#root/bot/context.js'
 
-type Options = Pick<SessionOptions<SessionData, Context>, 'getSessionKey' | 'storage'>
+type Options = Pick<SessionOptions<SessionData, Context>, 'getSessionKey' | 'storage' | 'initial'>
 
 export function session(options: Options): Middleware<Context> {
   return createSession({
     getSessionKey: options.getSessionKey,
     storage: options.storage,
-    initial: () => ({} as SessionData),
+    initial: options.initial || (() => ({} as SessionData)),
   })
 }

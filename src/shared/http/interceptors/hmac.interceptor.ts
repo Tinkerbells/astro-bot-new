@@ -45,7 +45,7 @@ export class HmacInterceptor implements HttpInterceptor {
 
   interceptResponseError(error: any): Promise<any> {
     if (error.response?.status === 401) {
-      console.error('HMAC Authentication failed:', error.response?.data)
+      console.error('Ошибка HMAC аутентификации:', error.response?.data)
     }
     return Promise.reject(error)
   }

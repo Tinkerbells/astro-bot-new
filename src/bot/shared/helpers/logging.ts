@@ -12,7 +12,7 @@ export function getUpdateInfo(ctx: Context): Omit<Update, 'update_id'> {
 export function logHandle(id: string): Middleware<Context> {
   return (ctx, next) => {
     ctx.logger.info({
-      msg: `Handle "${id}"`,
+      msg: `Обработчик "${id}"`,
       ...(id.startsWith('unhandled') ? { update: getUpdateInfo(ctx) } : {}),
     })
 

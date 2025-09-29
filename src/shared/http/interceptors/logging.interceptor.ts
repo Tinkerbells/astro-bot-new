@@ -30,7 +30,7 @@ export class LoggingInterceptor implements HttpInterceptor {
         params: requestWithMetadata.params,
         headers: this.sanitizeHeaders(requestWithMetadata.headers),
       },
-    }, 'HTTP Request')
+    }, 'HTTP Запрос')
 
     return requestWithMetadata
   }
@@ -45,7 +45,7 @@ export class LoggingInterceptor implements HttpInterceptor {
         method: response.config.method?.toUpperCase(),
         duration: this.calculateDuration(response),
       },
-    }, 'HTTP Response')
+    }, 'HTTP Ответ')
 
     return response
   }
@@ -61,7 +61,7 @@ export class LoggingInterceptor implements HttpInterceptor {
         method: error.config?.method?.toUpperCase(),
         code: error.code,
       },
-    }, 'HTTP Error')
+    }, 'HTTP Ошибка')
 
     return Promise.reject(error)
   }

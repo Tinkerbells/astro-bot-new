@@ -27,7 +27,7 @@ async function startPolling(config: PollingConfig) {
 
   // graceful shutdown
   onShutdown(async () => {
-    logger.info('Shutdown')
+    logger.info('Завершение работы')
     await runner?.stop()
   })
 
@@ -46,7 +46,7 @@ async function startPolling(config: PollingConfig) {
   })
 
   logger.info({
-    msg: 'Bot running...',
+    msg: 'Бот запущен...',
     username: bot.botInfo.username,
   })
 }
@@ -69,7 +69,7 @@ async function startWebhook(config: WebhookConfig) {
 
   // graceful shutdown
   onShutdown(async () => {
-    logger.info('Shutdown')
+    logger.info('Завершение работы')
     await serverManager.stop()
   })
 
@@ -79,7 +79,7 @@ async function startWebhook(config: WebhookConfig) {
   // start server
   const info = await serverManager.start()
   logger.info({
-    msg: 'Server started',
+    msg: 'Сервер запущен',
     url: info.url,
   })
 
@@ -89,7 +89,7 @@ async function startWebhook(config: WebhookConfig) {
     secret_token: config.botWebhookSecret,
   })
   logger.info({
-    msg: 'Webhook was set',
+    msg: 'Webhook установлен',
     url: config.botWebhook,
   })
 }
