@@ -11,6 +11,7 @@ const baseConfigSchema = v.object({
   redisUrl: v.optional(v.string(), 'redis://localhost:6379/0'),
   backendUrl: v.optional(v.string(), 'http://localhost:3000/api/'),
   hmacSecret: v.string(),
+  appHeaderLanguage: v.optional(v.string(), 'x-custom-lang'),
 })
 
 const configSchema = v.variant('botMode', [
