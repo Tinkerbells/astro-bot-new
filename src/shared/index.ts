@@ -1,4 +1,4 @@
-export * from './api-client/api-client.js'
+export * from './api-client/index.js'
 export * from './cache/redis/redis.js'
 export * from './config.js'
 export * from './logger.js'
