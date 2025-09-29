@@ -8,9 +8,18 @@ export {
 export type { HttpInterceptor } from './interceptor.js'
 export {
   HmacInterceptor,
+  type LanguageConfig,
+  LanguageInterceptor,
   LoggingInterceptor,
 } from './interceptors/index.js'
-export { NetError, type NetErrorItem } from './net-error.js'
+export {
+  BAD_REQUEST_ERROR_INFO,
+  INTERNAL_ERROR_INFO,
+  NetError,
+  type NetErrorItem,
+  NOT_FOUND_ERROR_INFO,
+  UNAUTHORIZED_HTTP_INFO,
+} from './net-error.js'
 export type {
   BotSignatureData,
   HmacConfig,
