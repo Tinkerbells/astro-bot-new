@@ -23,3 +23,7 @@ admin-commands-updated = Commands updated.
 ## Unhandled Feature
 
 unhandled = Unrecognized command. Try /start
+
+## Error Messages
+
+errors-user-load-failed = Failed to load user data. Please try again later.
