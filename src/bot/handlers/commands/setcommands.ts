@@ -28,17 +28,17 @@ function addCommandToChats(command: Command, chats: number[]) {
 }
 
 export async function setCommandsHandler(ctx: CommandContext<Context>) {
-  const start = new Command('start', i18n.t('en', 'start.description'))
+  const start = new Command('start', i18n.t('ru', 'start.description'))
     .addToScope({ type: 'all_private_chats' })
   addCommandLocalizations(start)
   addCommandToChats(start, ctx.config.botAdmins)
 
-  const language = new Command('language', i18n.t('en', 'language.description'))
+  const language = new Command('language', i18n.t('ru', 'language.description'))
     .addToScope({ type: 'all_private_chats' })
   addCommandLocalizations(language)
   addCommandToChats(language, ctx.config.botAdmins)
 
-  const setcommands = new Command('setcommands', i18n.t('en', 'setcommands.description'))
+  const setcommands = new Command('setcommands', i18n.t('ru', 'setcommands.description'))
   addCommandToChats(setcommands, ctx.config.botAdmins)
 
   const commands = new CommandGroup()
