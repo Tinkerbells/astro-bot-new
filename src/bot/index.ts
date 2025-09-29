@@ -13,12 +13,13 @@ import type { Logger } from '#root/shared/logger.js'
 import type { Context, SessionData } from '#root/bot/context.js'
 import type { UserService } from '#root/application/user-service/index.js'
 
+// import { i18n, isMultipleLocales } from '#root/bot/i18n.js'
+import { i18n } from '#root/bot/i18n.js'
 import { createRedisClient } from '#root/shared/index.js'
 import { errorHandler } from '#root/bot/handlers/error.js'
-import { i18n, isMultipleLocales } from '#root/bot/i18n.js'
 import { adminFeature } from '#root/bot/features/admin/index.js'
 import { session } from '#root/bot/shared/middlewares/session.js'
-import { languageFeature } from '#root/bot/features/language/index.js'
+// import { languageFeature } from '#root/bot/features/language/index.js'
 import { unhandledFeature } from '#root/bot/features/unhandled/index.js'
 import { updateLogger } from '#root/bot/shared/middlewares/update-logger.js'
 import { createUserSessionMiddleware } from '#root/bot/shared/middlewares/user.js'
@@ -86,8 +87,9 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
   // Handlers
   protectedBot.use(onboardingFeature)
   protectedBot.use(adminFeature)
-  if (isMultipleLocales)
-    protectedBot.use(languageFeature)
+  // TODO: добавить, когда появится жесткая необходимость
+  // if (isMultipleLocales)
+  //   protectedBot.use(languageFeature)
 
   // must be the last handler
   protectedBot.use(unhandledFeature)
