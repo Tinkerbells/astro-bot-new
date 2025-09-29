@@ -7,12 +7,14 @@ import type { Context as DefaultContext, SessionFlavor } from 'grammy'
 
 import type { Config } from '#root/shared/config.js'
 import type { Logger } from '#root/shared/logger.js'
+import type { User } from '#root/domain/entities/user/user.js'
 
 export type SessionData = Record<string, unknown>
 
 type ExtendedContextFlavor = {
   logger: Logger
   config: Config
+  user: User
 }
 
 export type Context = ConversationFlavor<

@@ -11,6 +11,7 @@ import { hydrateReply, parseMode } from '@grammyjs/parse-mode'
 import type { Config } from '#root/shared/config.js'
 import type { Logger } from '#root/shared/logger.js'
 import type { Context, SessionData } from '#root/bot/context.js'
+import type { UserService } from '#root/application/user-service/index.js'
 
 import { createRedisClient } from '#root/shared/index.js'
 import { errorHandler } from '#root/bot/handlers/error.js'
@@ -19,12 +20,14 @@ import { adminFeature } from '#root/bot/features/admin/index.js'
 import { session } from '#root/bot/shared/middlewares/session.js'
 import { languageFeature } from '#root/bot/features/language/index.js'
 import { unhandledFeature } from '#root/bot/features/unhandled/index.js'
+import { createUserMiddleware } from '#root/bot/shared/middlewares/user.js'
 import { updateLogger } from '#root/bot/shared/middlewares/update-logger.js'
 import { greetingConversation, onboardingFeature } from '#root/bot/features/onboarding/index.js'
 
 type Dependencies = {
   config: Config
   logger: Logger
+  userService: UserService
 }
 
 function getSessionKey(ctx: Omit<Context, 'session'>) {
@@ -35,6 +38,7 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
   const {
     config,
     logger,
+    userService,
   } = dependencies
 
   const bot = new TelegramBot<Context>(token, botConfig)
@@ -69,6 +73,7 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
     }),
   }))
   protectedBot.use(i18n)
+  protectedBot.use(createUserMiddleware(userService))
   protectedBot.use(conversations())
   protectedBot.use(greetingConversation())
 

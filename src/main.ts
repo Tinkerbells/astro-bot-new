@@ -12,11 +12,16 @@ import { createBot } from '#root/bot/index.js'
 import { config } from '#root/shared/config.js'
 import { logger } from '#root/shared/logger.js'
 import { createServer, createServerManager } from '#root/server/index.js'
+import { createUserService } from '#root/application/user-service/index.js'
+
+// Create shared dependencies
+const userService = createUserService()
 
 async function startPolling(config: PollingConfig) {
   const bot = createBot(config.botToken, {
     config,
     logger,
+    userService,
   })
   let runner: undefined | RunnerHandle
 
@@ -50,6 +55,7 @@ async function startWebhook(config: WebhookConfig) {
   const bot = createBot(config.botToken, {
     config,
     logger,
+    userService,
   })
   const server = createServer({
     bot,
