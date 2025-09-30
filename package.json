@@ -39,6 +39,7 @@
     "callback-data": "1.1.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
+    "geo-tz": "^8.1.4",
     "grammy": "1.35.0",
     "grammy-middlewares": "^1.0.11",
     "hono": "4.7.2",
