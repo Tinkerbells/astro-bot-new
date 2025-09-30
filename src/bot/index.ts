@@ -21,9 +21,10 @@ import { adminFeature } from '#root/bot/features/admin/index.js'
 import { session } from '#root/bot/shared/middlewares/session.js'
 // import { languageFeature } from '#root/bot/features/language/index.js'
 import { unhandledFeature } from '#root/bot/features/unhandled/index.js'
+import { onboardingFeature } from '#root/bot/features/onboarding/index.js'
 import { updateLogger } from '#root/bot/shared/middlewares/update-logger.js'
+import { OnboardingStatus } from '#root/application/onboarding-service/index.js'
 import { createUserSessionMiddleware } from '#root/bot/shared/middlewares/user.js'
-import { greetingConversation, onboardingFeature } from '#root/bot/features/onboarding/index.js'
 
 type Dependencies = {
   config: Config
@@ -72,7 +73,10 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
     initial: (): SessionData => {
       // Начальное значение будет переопределено в user middleware
       // Но TypeScript требует обязательное поле user
-      return {} as SessionData
+      return {
+        onboarding:
+          { current: 0, status: OnboardingStatus.Idle, stepsData: [] },
+      } as unknown as SessionData
     },
     storage: new RedisAdapter<SessionData>({
       instance: createRedisClient(config.redisUrl),
@@ -80,9 +84,17 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
     }),
   }))
   protectedBot.use(i18n)
+  // Устанавливаем русский язык по умолчанию для всех пользователей
+  protectedBot.use(async (ctx, next) => {
+    // Проверяем текущую локаль и если она не установлена или не 'ru', устанавливаем 'ru'
+    const currentLocale = await ctx.i18n.getLocale()
+    if (currentLocale !== 'ru') {
+      await ctx.i18n.setLocale('ru')
+    }
+    await next()
+  })
   protectedBot.use(createUserSessionMiddleware(userService))
   protectedBot.use(conversations())
-  protectedBot.use(greetingConversation())
 
   // Handlers
   protectedBot.use(onboardingFeature)
