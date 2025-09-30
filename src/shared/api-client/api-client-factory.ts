@@ -1,6 +1,5 @@
-import { formatApiError } from '#root/data/error/index.js'
-
 import { config } from '../config.js'
+import { formatApiError } from './error/index.js'
 import { createHttpService } from '../http/http-client.js'
 import { HmacInterceptor, LanguageInterceptor, LoggingInterceptor } from '../http/index.js'
 
