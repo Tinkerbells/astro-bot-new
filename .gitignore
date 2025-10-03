@@ -125,9 +125,6 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-# Data
-data/
-
 *.env
 
 # Jetbrains IDE
