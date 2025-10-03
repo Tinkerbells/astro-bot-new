@@ -1,6 +1,3 @@
 export { createOnboardingService, OnboardingService } from './onboarding-service.js'
-export { OnboardingStatus } from './onboarding-state.js'
-export type { OnboardingState } from './onboarding-state.js'
-export type { IStepFactory } from './onboarding.types.js'
-export { Step } from './onboarding.types.js'
-export { StepFactory } from './step-factory.js'
+export type { OnboardingState } from './onboarding.types.js'
+export { OnboardingStatus } from './onboarding.types.js'

@@ -1,9 +1,13 @@
 import type { ValidationOptions } from 'class-validator'
 
 import { Expose } from 'class-transformer'
-import { IsNotEmpty, IsString, registerDecorator } from 'class-validator'
+import { IsNotEmpty, IsOptional, IsString, registerDecorator, validateOrReject } from 'class-validator'
 
-import { Step } from '#root/application/onboarding-service/index.js'
+import type { Context } from '#root/bot/context.js'
+
+import type { OnboardingStep } from './step.types.js'
+
+import { createBirthTimeKeyboard } from '../keyboards.js'
 
 // Custom validator for birth time format and validity
 function IsValidBirthTime(validationOptions?: ValidationOptions) {
@@ -43,23 +47,47 @@ function IsValidBirthTime(validationOptions?: ValidationOptions) {
 }
 
 export type BirthTimeData = {
-  birthTime: string
+  birthTime?: string
+  birthTimeSkipped?: boolean
 }
 
-export class BirthTimeStep extends Step<BirthTimeData> {
+export class BirthTimeStep implements OnboardingStep<BirthTimeData> {
   @Expose()
+  @IsOptional()
   @IsNotEmpty()
   @IsString()
   @IsValidBirthTime()
-  birthTime!: string
+  birthTime?: string
 
-  constructor(input: string) {
-    const birthTime = BirthTimeStep.formatToStandardTime(input.trim())
-    super({ birthTime })
-    this.birthTime = birthTime
+  public init(input: string) {
+    const birthTime = input.trim().replace(/[:\-]/g, ':')
+    this.birthTime = birthTime || undefined
   }
 
-  private static formatToStandardTime(time: string): string {
-    return time.replace(/[:\-]/g, ':')
+  public skip() {
+    this.birthTime = undefined
+  }
+
+  public get data() {
+    return {
+      birthTime: this.birthTime,
+    }
+  }
+
+  public message(ctx: Context) {
+    return ctx.reply(ctx.t('onboarding-birth-time'), {
+      reply_markup: createBirthTimeKeyboard(ctx),
+    })
+  }
+
+  public async validate(ctx: Context) {
+    try {
+      await validateOrReject(this)
+    }
+    catch (err) {
+      ctx.logger.error(err)
+      await ctx.reply(ctx.t('onboarding-birth-time-invalid'))
+      throw err
+    }
   }
 }

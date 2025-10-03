@@ -75,7 +75,7 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
       // Но TypeScript требует обязательное поле user
       return {
         onboarding:
-          { current: 0, status: OnboardingStatus.Idle, stepsData: [] },
+          { current: 0, status: OnboardingStatus.Idle, stepsData: [], totalSteps: 3 },
       } as unknown as SessionData
     },
     storage: new RedisAdapter<SessionData>({

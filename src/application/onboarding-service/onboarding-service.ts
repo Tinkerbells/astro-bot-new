@@ -1,61 +1,26 @@
-import type { ValidationError } from 'class-validator'
+import type { PersistStorage } from '#root/shared/index.js'
 
-import type { IStepFactory } from './onboarding.types.js'
-import type { OnboardingState } from './onboarding-state.js'
+import type { OnboardingState } from './onboarding.types.js'
 
-import { OnboardingStatus } from './onboarding-state.js'
+import { OnboardingStatus } from './onboarding.types.js'
 
 export class OnboardingService {
   private state: OnboardingState
+
   constructor(
-    private readonly factory: IStepFactory,
-    initialState?: OnboardingState,
+    initialState: OnboardingState,
+    private readonly persistStorage?: PersistStorage,
+    private readonly onComplete?: (state: OnboardingState) => Promise<void> | void,
   ) {
-    this.state = initialState ?? {
-      status: OnboardingStatus.Idle,
-      current: 0,
-      stepsData: [],
-    }
-  }
-
-  public async process(input: string): Promise<void> {
-    if (this.state.current >= this.factory.count()) {
-      throw new Error('Onboarding already completed')
-    }
-
-    const step = this.factory.create(this.state.current, input)
-
-    // Validate with focused try-catch for class-validator errors
-    try {
-      await step.validate()
-    }
-    catch (error) {
-      const validationErrors = Array.isArray(error) ? error as ValidationError[] : []
-
-      if (validationErrors.length > 0) {
-        const firstError = validationErrors[0]
-        const errorMessage = firstError.constraints
-          ? String(Object.values(firstError.constraints)[0])
-          : 'Validation error'
-
-        throw new Error(errorMessage)
-      }
-
-      throw new Error('Validation error')
-    }
-
-    // Store step data
-    this.state.stepsData.push(step.getData())
-
-    // Move to next step
-    this.next()
+    this.state = initialState
   }
 
   public setState(state: OnboardingState) {
     this.state = state
+    this.persistStorage?.setObject('onboarding', this.state)
   }
 
-  public currentIndex(): number {
+  public get currentIndex(): number {
     return this.state.current
   }
 
@@ -63,6 +28,7 @@ export class OnboardingService {
     return {
       status: this.state.status,
       current: this.state.current,
+      totalSteps: this.state.totalSteps,
       stepsData: this.state.stepsData.map(data => ({ ...data })),
     }
   }
@@ -71,21 +37,38 @@ export class OnboardingService {
     return this.state.status === OnboardingStatus.Completed
   }
 
-  public totalSteps(): number {
-    return this.factory.count()
+  public async next(stepData: Record<string, unknown>): Promise<boolean> {
+    if (this.isCompleted) {
+      throw new Error('Onboarding already completed')
+    }
+
+    this.state.stepsData.push(stepData)
+
+    const isLastStep = this.state.current + 1 >= this.state.totalSteps
+
+    if (isLastStep) {
+      this.state.current = this.state.totalSteps
+      this.state.status = OnboardingStatus.Completed
+      this.persistStorage?.setObject('onboarding', this.state)
+      if (this.onComplete)
+        await this.onComplete(this.state)
+      return false
+    }
+
+    this.state.current++
+    this.state.status = OnboardingStatus.InProgress
+    this.persistStorage?.setObject('onboarding', this.state)
+    return true
   }
 
-  private async next(): Promise<void> {
-    if (this.state.current + 1 >= this.factory.count()) {
-      this.state.status = OnboardingStatus.Completed
-    }
-    else {
-      this.state.current++
-      this.state.status = OnboardingStatus.InProgress
-    }
+  public reset() {
+    this.state.status = OnboardingStatus.Idle
+    this.state.current = 0
+    this.state.stepsData = []
+    this.persistStorage?.setObject('onboarding', this.state)
   }
 }
 
-export function createOnboardingService(factory: IStepFactory, initialState?: OnboardingState) {
-  return new OnboardingService(factory, initialState)
+export function createOnboardingService(initialState: OnboardingState, persistStorage?: PersistStorage, onComplete?: (state: OnboardingState) => Promise<void> | void) {
+  return new OnboardingService(initialState, persistStorage, onComplete)
 }

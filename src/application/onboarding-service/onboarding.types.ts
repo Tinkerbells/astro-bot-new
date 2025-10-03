@@ -1,17 +1,12 @@
-import { validateOrReject } from 'class-validator'
-
-export abstract class Step<T extends object> {
-  constructor(protected readonly data: T) { }
-  public async validate(): Promise<void> {
-    await validateOrReject(this)
-  }
-
-  getData(): T {
-    return this.data
-  }
+export enum OnboardingStatus {
+  Idle = 0,
+  InProgress = 1,
+  Completed = 2,
 }
 
-export type IStepFactory = {
-  create: (index: number, input: string) => Step<any>
-  count: () => number
+export type OnboardingState = {
+  totalSteps: number
+  status: OnboardingStatus
+  current: number
+  stepsData: Record<string, unknown>[]
 }

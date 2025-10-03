@@ -1,12 +1,16 @@
 import type { ValidationOptions } from 'class-validator'
 
 import { Expose, Transform } from 'class-transformer'
-import { IsNotEmpty, IsNumber, IsOptional, IsString, registerDecorator } from 'class-validator'
+import { IsNotEmpty, IsNumber, IsOptional, IsString, registerDecorator, validateOrReject } from 'class-validator'
 
-import { Step } from '#root/application/onboarding-service/index.js'
+import type { Context } from '#root/bot/context.js'
+
+import type { CityData } from '../constants.js'
+import type { OnboardingStep } from './step.types.js'
 
 import { findCityByText } from '../utils/city-utils.js'
 import { isValidTimezone as validateTimezone } from '../utils/timezone-utils.js'
+import { createCitiesInlineKeyboard, createLocationRequestKeyboard } from '../keyboards.js'
 
 // Custom validator for timezone
 function IsValidTimezone(validationOptions?: ValidationOptions) {
@@ -35,7 +39,7 @@ export type TimezoneData = {
   longitude?: number
 }
 
-export class TimezoneStep extends Step<TimezoneData> {
+export class TimezoneStep implements OnboardingStep<TimezoneData> {
   @Expose()
   @IsOptional()
   @IsString()
@@ -59,27 +63,11 @@ export class TimezoneStep extends Step<TimezoneData> {
   @IsNumber()
   longitude?: number
 
-  constructor(input: string) {
-    // Check if input is a city name from our list
+  public init(input: string) {
+    this.city = undefined
+    this.latitude = undefined
+    this.longitude = undefined
     const cityOption = findCityByText(input)
-
-    let data: TimezoneData
-
-    if (cityOption) {
-      data = {
-        city: cityOption.city,
-        timezone: cityOption.timezone,
-        latitude: cityOption.latitude,
-        longitude: cityOption.longitude,
-      }
-    }
-    else {
-      // Treat as timezone string
-      const timezone = input.trim()
-      data = { timezone }
-    }
-
-    super(data)
 
     // Set properties after super()
     if (cityOption) {
@@ -90,6 +78,43 @@ export class TimezoneStep extends Step<TimezoneData> {
     }
     else {
       this.timezone = input.trim()
+    }
+  }
+
+  public setCity(cityData: CityData) {
+    this.city = cityData.city
+    this.timezone = cityData.timezone
+    this.latitude = cityData.latitude
+    this.longitude = cityData.longitude
+  }
+
+  public get data() {
+    return {
+      city: this.city,
+      timezone: this.timezone,
+      latitude: this.latitude,
+      longitude: this.longitude,
+    }
+  }
+
+  public async message(ctx: Context) {
+    await ctx.reply(ctx.t('onboarding-location'), {
+      reply_markup: createCitiesInlineKeyboard(),
+    })
+
+    return ctx.reply(ctx.t('onboarding-location-share'), {
+      reply_markup: createLocationRequestKeyboard(ctx),
+    })
+  }
+
+  public async validate(ctx: Context) {
+    try {
+      await validateOrReject(this)
+    }
+    catch (err) {
+      ctx.logger.error(err)
+      await ctx.reply(ctx.t('onboarding-timezone-invalid'))
+      throw err
     }
   }
 }

@@ -9,7 +9,3 @@ export function findCityByText(text: string): CityData | undefined {
     || searchText.includes(city.city.toLowerCase()),
   )
 }
-
-export function getCitiesKeyboard(): string[] {
-  return POPULAR_RUSSIAN_CITIES.slice(0, 8).map(city => city.city)
-}

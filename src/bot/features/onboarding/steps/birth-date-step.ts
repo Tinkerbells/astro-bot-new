@@ -1,9 +1,11 @@
 import type { ValidationOptions } from 'class-validator'
 
 import { Expose } from 'class-transformer'
-import { IsNotEmpty, IsString, registerDecorator } from 'class-validator'
+import { IsNotEmpty, IsString, registerDecorator, validateOrReject } from 'class-validator'
 
-import { Step } from '#root/application/onboarding-service/index.js'
+import type { Context } from '#root/bot/context.js'
+
+import type { OnboardingStep } from './step.types.js'
 
 function IsValidBirthDate(validationOptions?: ValidationOptions) {
   return function (object: object, propertyName: string) {
@@ -50,16 +52,33 @@ export type BirthDateData = {
   birthDate: string
 }
 
-export class BirthDateStep extends Step<BirthDateData> {
+export class BirthDateStep implements OnboardingStep<BirthDateData> {
   @Expose()
   @IsNotEmpty()
   @IsString()
   @IsValidBirthDate()
   birthDate!: string
 
-  constructor(input: string) {
-    const birthDate = input.trim()
-    super({ birthDate })
-    this.birthDate = birthDate
+  public init(input: string) {
+    this.birthDate = input.trim()
+  }
+
+  public get data() {
+    return { birthDate: this.birthDate }
+  }
+
+  public message(ctx: Context) {
+    return ctx.reply(ctx.t('onboarding-birth-date'))
+  }
+
+  public async validate(ctx: Context) {
+    try {
+      await validateOrReject(this)
+    }
+    catch (err) {
+      ctx.logger.error(err)
+      await ctx.reply(ctx.t('onboarding-birth-date-invalid'))
+      throw err
+    }
   }
 }
