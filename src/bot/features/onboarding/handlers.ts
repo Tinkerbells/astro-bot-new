@@ -12,7 +12,6 @@ const composer = new Composer<Context>()
 const feature = composer.chatType('private')
 
 // Регистрируем conversation
-// @ts-expect-error - Type mismatch between grammy Context types is a known issue
 feature.use(createConversation(onboarding, ONBOARDING_CONVERSATION))
 
 // Обработчик команды /start

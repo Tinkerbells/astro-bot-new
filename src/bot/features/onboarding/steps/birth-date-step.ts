@@ -5,7 +5,7 @@ import type { Context } from '#root/bot/context.js'
 
 import { parseBirthDateInput } from '../utils/date-utils.js'
 
-type FormValidateResult<T> = { ok: false } | { ok: true, value: T }
+type FormValidateResult<T> = { ok: false, error: unknown } | { ok: true, value: T }
 
 export class BirthDateStep {
   @Expose()
@@ -26,7 +26,7 @@ export class BirthDateStep {
       validate: async (ctx: Context): Promise<FormValidateResult<string>> => {
         const text = (ctx.message ?? ctx.channelPost)?.text
         if (!text)
-          return { ok: false }
+          return { ok: false, error: 'No text message' }
 
         try {
           const step = plainToInstance(BirthDateStep, { birthDate: text })
@@ -36,7 +36,7 @@ export class BirthDateStep {
         }
         catch (err) {
           ctx.logger.error(err)
-          return { ok: false }
+          return { ok: false, error: err }
         }
       },
       action: async (ctx: Context) => {

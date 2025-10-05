@@ -13,7 +13,7 @@ export function createLocationRequestKeyboard(ctx: Context) {
 
 export function createBirthTimeKeyboard(ctx: Context) {
   return new InlineKeyboard()
-    .text(ctx.t('onboarding-skip'), 'onboarding:birth-time:skip')
+    .text(ctx.t('onboarding-skip'), 'skip_birth_time')
 }
 
 export function createCitiesInlineKeyboard() {

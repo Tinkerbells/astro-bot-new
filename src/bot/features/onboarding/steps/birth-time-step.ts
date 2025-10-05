@@ -7,7 +7,7 @@ import type { Context } from '#root/bot/context.js'
 
 dayjs.extend(customParseFormat)
 
-type FormValidateResult<T> = { ok: false } | { ok: true, value: T }
+type FormValidateResult<T> = { ok: false, error: unknown } | { ok: true, value: T }
 
 export class BirthTimeStep {
   @Expose()
@@ -49,7 +49,7 @@ export class BirthTimeStep {
       validate: async (ctx: Context): Promise<FormValidateResult<string | null>> => {
         const text = (ctx.message ?? ctx.channelPost)?.text
         if (!text)
-          return { ok: false }
+          return { ok: false, error: 'No text message' }
 
         try {
           const step = plainToInstance(BirthTimeStep, { birthTime: text })
@@ -59,7 +59,7 @@ export class BirthTimeStep {
         }
         catch (err) {
           ctx.logger.error(err)
-          return { ok: false }
+          return { ok: false, error: err }
         }
       },
       otherwise: async (ctx: Context) => {

@@ -19,7 +19,7 @@ import { createBirthTimeKeyboard, createCitiesInlineKeyboard, createLocationRequ
 export const ONBOARDING_CONVERSATION = 'onboarding'
 
 export async function onboarding(
-  conversation: Conversation<Context>,
+  conversation: Conversation<Context, Context>,
   ctx: Context,
 ) {
   // Обновляем статус онбординга в сессии через conversation.external
@@ -33,8 +33,6 @@ export async function onboarding(
   // === Шаг 1: Дата рождения ===
   await ctx.reply(ctx.t('onboarding-birth-date'))
 
-  // TODO: Исправить типизацию FormBuilder для работы с кастомным Context
-  // @ts-expect-error - Type mismatch between grammy Context types
   const birthDate = await conversation.form.build(BirthDateStep.toFormBuilder())
 
   // === Шаг 2: Время рождения ===
@@ -57,8 +55,6 @@ export async function onboarding(
   else if (birthTimeCtx.message?.text) {
     // Используем FormBuilder из BirthTimeStep
     const builder = BirthTimeStep.toFormBuilder()
-    // TODO: Исправить типизацию FormBuilder для работы с кастомным Context
-    // @ts-expect-error - Type mismatch between grammy Context types
     const result = await builder.validate(birthTimeCtx)
 
     if (result.ok) {

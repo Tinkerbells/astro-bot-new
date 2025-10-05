@@ -20,6 +20,7 @@ type ExtendedContextFlavor = {
   config: Config
 }
 
+// Внешний контекст (используется в middleware)
 export type Context = ConversationFlavor<
   ParseModeFlavor<
     HydrateFlavor<

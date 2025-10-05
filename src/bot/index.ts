@@ -1,4 +1,5 @@
 import type { BotConfig } from 'grammy'
+import type { ConversationData, VersionedState } from '@grammyjs/conversations'
 
 import { hydrate } from '@grammyjs/hydrate'
 import { Bot as TelegramBot } from 'grammy'
@@ -36,6 +37,11 @@ type Dependencies = {
 function getUserSessionKey(ctx: Omit<Context, 'session'>) {
   // Храним данные по каждому пользователю отдельно для персистентности
   return ctx.from?.id.toString()
+}
+
+function getUserConversationKey(ctx: Omit<Context, 'session'>) {
+  // Храним данные по каждому пользователю отдельно для персистентности
+  return `convo-${ctx.from?.id.toString()}`
 }
 
 export function createBot(token: string, dependencies: Dependencies, botConfig?: BotConfig<Context>) {
@@ -95,15 +101,20 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
     await next()
   })
   protectedBot.use(createUserSessionMiddleware(userService))
-  protectedBot.use(conversations({
+  protectedBot.use(conversations<Context, Context>({
     storage: {
       type: 'key',
-      adapter: new RedisAdapter({
+      version: 1, // Версия для миграции данных при изменении диалогов
+      adapter: new RedisAdapter<VersionedState<ConversationData>>({
         instance: createRedisClient(config.redisUrl),
         ttl: 86400, // 24 часа для данных диалогов
       }),
-      getStorageKey: getUserSessionKey,
+      getStorageKey: getUserConversationKey,
     },
+    plugins: [
+      i18n.middleware(),
+      hydrate(),
+    ],
   }))
 
   // Handlers
