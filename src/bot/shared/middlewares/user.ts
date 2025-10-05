@@ -34,7 +34,6 @@ export function createUserSessionMiddleware(userService: UserService) {
       }
     }
     else {
-      // Пользователь уже есть в сессии, просто логируем
       ctx.logger.debug({ userId: ctx.session.user.id, socialId: ctx.session.user.socialId }, 'Пользователь загружен из сессии')
     }
 

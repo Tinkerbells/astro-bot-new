@@ -19,6 +19,7 @@ import { createRedisClient } from '#root/shared/index.js'
 import { errorHandler } from '#root/bot/handlers/error.js'
 import { adminFeature } from '#root/bot/features/admin/index.js'
 import { session } from '#root/bot/shared/middlewares/session.js'
+import { profileFeature } from '#root/bot/features/profile/index.js'
 // import { languageFeature } from '#root/bot/features/language/index.js'
 import { unhandledFeature } from '#root/bot/features/unhandled/index.js'
 import { onboardingFeature } from '#root/bot/features/onboarding/index.js'
@@ -94,10 +95,20 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
     await next()
   })
   protectedBot.use(createUserSessionMiddleware(userService))
-  protectedBot.use(conversations())
+  protectedBot.use(conversations({
+    storage: {
+      type: 'key',
+      adapter: new RedisAdapter({
+        instance: createRedisClient(config.redisUrl),
+        ttl: 86400, // 24 часа для данных диалогов
+      }),
+      getStorageKey: getUserSessionKey,
+    },
+  }))
 
   // Handlers
   protectedBot.use(onboardingFeature)
+  protectedBot.use(profileFeature)
   protectedBot.use(adminFeature)
   // TODO: добавить, когда появится жесткая необходимость
   // if (isMultipleLocales)

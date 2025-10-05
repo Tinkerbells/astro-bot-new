@@ -2,7 +2,7 @@ import { InlineKeyboard, Keyboard } from 'grammy'
 
 import type { Context } from '#root/bot/context.js'
 
-import { POPULAR_RUSSIAN_CITIES } from './constants.js'
+import { City } from '#root/domain/entities/index.js'
 
 export function createLocationRequestKeyboard(ctx: Context) {
   return new Keyboard()
@@ -19,8 +19,8 @@ export function createBirthTimeKeyboard(ctx: Context) {
 export function createCitiesInlineKeyboard() {
   const keyboard = new InlineKeyboard()
 
-  POPULAR_RUSSIAN_CITIES.forEach((city, index) => {
-    keyboard.text(city.city, `onboarding:timezone:city:${index}`)
+  City.popularRussianCities.forEach((city, index) => {
+    keyboard.text(city.name, `onboarding:timezone:city:${index}`)
     if ((index + 1) % 2 === 0)
       keyboard.row()
   })

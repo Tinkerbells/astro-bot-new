@@ -7,103 +7,169 @@ import {
   UNAUTHORIZED_HTTP_INFO,
 } from '#root/shared/http/index.js'
 
+import type { ApiErrorInfo } from './api-data-error.js'
+
 import { ApiDataError } from './api-data-error.js'
 
 type BackendErrorResponse = {
-  statusCode: number
   message?: string
   error?: string
-  errorMessage?: string
+  statusCode?: number | string
   errors?: Array<{
-    message: string
-    additionalInfo: {
-      errorCustomField?: string
-    }
+    message?: string
+    additionalInfo?: Record<string, unknown>
   }>
 }
 
-export function getMainApiErrorRes(error: HttpServiceError<BackendErrorResponse, BackendErrorResponse>): BackendErrorResponse {
-  if (error?.response?.status === UNAUTHORIZED_HTTP_INFO.code) {
-    return {
-      statusCode: UNAUTHORIZED_HTTP_INFO.code,
-      errors: [
-        {
-          message: UNAUTHORIZED_HTTP_INFO.message,
-          additionalInfo: {},
-        },
-      ],
-    }
-  }
-
-  return (
-    error.response?.data || {
-      statusCode: INTERNAL_ERROR_INFO.httpCode,
-      errors: [
-        {
-          message: INTERNAL_ERROR_INFO.message,
-          additionalInfo: {},
-        },
-      ],
-    }
-  )
+export function getMainApiErrorRes(
+  mainApiError: HttpServiceError<BackendErrorResponse, BackendErrorResponse>,
+): BackendErrorResponse | null {
+  return mainApiError.response?.data ?? null
 }
 
-export function formatApiError(mainApiError: HttpServiceError<BackendErrorResponse, BackendErrorResponse>): ApiDataError {
-  const errorResponse: BackendErrorResponse = getMainApiErrorRes(mainApiError)
+export function formatApiError(
+  mainApiError: HttpServiceError<BackendErrorResponse, BackendErrorResponse>,
+): ApiDataError {
+  const payload = getMainApiErrorRes(mainApiError)
+  const statusCode = resolveStatusCode(mainApiError, payload)
+  const errorCode = typeof payload?.error === 'string' ? payload.error : undefined
+  const baseAdditionalInfo = buildBaseAdditionalInfo(statusCode, errorCode)
 
-  const { statusCode } = errorResponse
-
-  // Если есть массив ошибок в response, используем их
-  if (errorResponse.errors && errorResponse.errors.length) {
-    return new ApiDataError({
-      errors: errorResponse.errors,
-    })
+  const payloadErrors = normalizeErrorItems(payload?.errors, baseAdditionalInfo)
+  if (payloadErrors.length > 0) {
+    return new ApiDataError({ errors: payloadErrors })
   }
 
-  // Если есть message в response от backend
-  if (errorResponse.message) {
+  const messageFromPayload = readMessage(payload?.message)
+  if (messageFromPayload) {
     return new ApiDataError({
       errors: [
         {
-          message: errorResponse.message,
-          additionalInfo: {
-            errorCustomField: errorResponse.error, // Добавляем error код если есть
-          },
+          message: messageFromPayload,
+          additionalInfo: { ...baseAdditionalInfo },
         },
       ],
     })
   }
 
-  // Обработка по statusCode
-  switch (statusCode) {
-    case BAD_REQUEST_ERROR_INFO.code:
-      return new ApiDataError({
-        errors: [
-          {
-            message: BAD_REQUEST_ERROR_INFO.message,
-            additionalInfo: {},
-          },
-        ],
-      })
+  const fallbackMessage = fallbackMessageByStatus(statusCode)
+    ?? mainApiError.message
+    ?? INTERNAL_ERROR_INFO.message
 
-    case NOT_FOUND_ERROR_INFO.code:
-      return new ApiDataError({
-        errors: [
-          {
-            message: NOT_FOUND_ERROR_INFO.message,
-            additionalInfo: {},
-          },
-        ],
-      })
+  return new ApiDataError({
+    errors: [
+      {
+        message: fallbackMessage,
+        additionalInfo: { ...baseAdditionalInfo },
+      },
+    ],
+  })
+}
 
-    default:
-      return new ApiDataError({
-        errors: [
-          {
-            message: INTERNAL_ERROR_INFO.message,
-            additionalInfo: {},
-          },
-        ],
-      })
+function normalizeErrorItems(
+  items: BackendErrorResponse['errors'],
+  baseAdditionalInfo: Record<string, unknown>,
+): ApiErrorInfo[] {
+  if (!Array.isArray(items) || items.length === 0) {
+    return []
   }
+
+  return items.reduce<ApiErrorInfo[]>((accumulator, item) => {
+    if (!item) {
+      return accumulator
+    }
+
+    const message = readMessage(item.message)
+    const additionalInfo = {
+      ...baseAdditionalInfo,
+      ...(isRecord(item.additionalInfo) ? item.additionalInfo : {}),
+    }
+
+    if (message) {
+      accumulator.push({
+        message,
+        additionalInfo,
+      })
+      return accumulator
+    }
+
+    accumulator.push({
+      message: INTERNAL_ERROR_INFO.message,
+      additionalInfo,
+    })
+    return accumulator
+  }, [])
+}
+
+function buildBaseAdditionalInfo(
+  statusCode: number | undefined,
+  errorCode: string | undefined,
+): Record<string, unknown> {
+  const additionalInfo: Record<string, unknown> = {}
+
+  if (typeof statusCode === 'number') {
+    additionalInfo.statusCode = statusCode
+  }
+
+  if (errorCode) {
+    additionalInfo.code = errorCode
+  }
+
+  return additionalInfo
+}
+
+function resolveStatusCode(
+  error: HttpServiceError<BackendErrorResponse, BackendErrorResponse>,
+  payload: BackendErrorResponse | null,
+): number | undefined {
+  if (typeof error.response?.status === 'number') {
+    return error.response.status
+  }
+
+  if (payload?.statusCode !== undefined) {
+    return readStatusCode(payload.statusCode)
+  }
+
+  return undefined
+}
+
+function readStatusCode(value: unknown): number | undefined {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value
+  }
+
+  if (typeof value === 'string') {
+    const parsed = Number.parseInt(value, 10)
+    if (!Number.isNaN(parsed)) {
+      return parsed
+    }
+  }
+
+  return undefined
+}
+
+function fallbackMessageByStatus(statusCode: number | undefined): string | undefined {
+  switch (statusCode) {
+    case UNAUTHORIZED_HTTP_INFO.code:
+      return UNAUTHORIZED_HTTP_INFO.message
+    case BAD_REQUEST_ERROR_INFO.code:
+      return BAD_REQUEST_ERROR_INFO.message
+    case NOT_FOUND_ERROR_INFO.code:
+      return NOT_FOUND_ERROR_INFO.message
+    default:
+      return undefined
+  }
+}
+
+function readMessage(value: unknown): string | undefined {
+  if (typeof value !== 'string') {
+    return undefined
+  }
+
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : undefined
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
 }

@@ -2,14 +2,10 @@ import { NetError } from '#root/shared/http/index.js'
 
 export type ApiErrorInfo = {
   message: string
-  additionalInfo: {
-    errorCustomField?: string
-  }
+  additionalInfo: Record<string, unknown>
 }
 
-export class ApiDataError extends NetError<{
-  errorCustomField?: string
-}> {
+export class ApiDataError extends NetError<Record<string, unknown>> {
   constructor({ errors }: { errors: ApiErrorInfo[] }) {
     super({ errors })
   }

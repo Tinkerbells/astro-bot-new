@@ -1,93 +1,70 @@
-import type { ValidationOptions } from 'class-validator'
-
-import { Expose } from 'class-transformer'
-import { IsNotEmpty, IsOptional, IsString, registerDecorator, validateOrReject } from 'class-validator'
+import dayjs from 'dayjs'
+import customParseFormat from 'dayjs/plugin/customParseFormat.js'
+import { Expose, plainToInstance, Transform } from 'class-transformer'
+import { IsNotEmpty, IsOptional, IsString, Matches, validateOrReject } from 'class-validator'
 
 import type { Context } from '#root/bot/context.js'
 
-import type { OnboardingStep } from './step.types.js'
+dayjs.extend(customParseFormat)
 
-import { createBirthTimeKeyboard } from '../keyboards.js'
+type FormValidateResult<T> = { ok: false } | { ok: true, value: T }
 
-// Custom validator for birth time format and validity
-function IsValidBirthTime(validationOptions?: ValidationOptions) {
-  return function (object: object, propertyName: string) {
-    registerDecorator({
-      name: 'isValidBirthTime',
-      target: object.constructor,
-      propertyName,
-      options: validationOptions,
-      validator: {
-        validate(value: any) {
-          if (typeof value !== 'string')
-            return false
-
-          // Check format first
-          if (!/^\d{1,2}[:\-]\d{2}$/.test(value))
-            return false
-
-          // Parse and validate time
-          const timeRegex = /^(\d{1,2})[:\-](\d{2})$/
-          const match = value.match(timeRegex)
-
-          if (!match)
-            return false
-
-          const hours = Number.parseInt(match[1], 10)
-          const minutes = Number.parseInt(match[2], 10)
-
-          return hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59
-        },
-        defaultMessage() {
-          return 'Время рождения должно быть в формате ЧЧ:ММ или ЧЧ-ММ и быть корректным временем'
-        },
-      },
-    })
-  }
-}
-
-export type BirthTimeData = {
-  birthTime?: string
-  birthTimeSkipped?: boolean
-}
-
-export class BirthTimeStep implements OnboardingStep<BirthTimeData> {
+export class BirthTimeStep {
   @Expose()
   @IsOptional()
+  @Transform(({ value }) => BirthTimeStep.parseBirthTimeInput(value), { toClassOnly: true })
   @IsNotEmpty()
   @IsString()
-  @IsValidBirthTime()
-  birthTime?: string
+  @Matches(/^(?:[01]\d|2[0-3]):[0-5]\d$/, {
+    message: 'Время рождения должно быть в формате ЧЧ:ММ и быть корректным временем',
+  })
+  birthTime: string | null
 
-  public init(input: string) {
-    const birthTime = input.trim().replace(/[:\-]/g, ':')
-    this.birthTime = birthTime || undefined
+  static parseBirthTimeInput(birthTime?: string): string | undefined {
+    if (!birthTime)
+      return undefined
+
+    const trimmed = birthTime.trim()
+    if (!trimmed)
+      return undefined
+
+    const sanitized = trimmed.replace(/[.\-]/g, ':')
+    const timeFormats = ['H:mm', 'HH:mm']
+
+    for (const format of timeFormats) {
+      const parsed = dayjs(sanitized, format, true)
+      if (parsed.isValid())
+        return parsed.format('HH:mm')
+    }
+
+    return undefined
   }
 
-  public skip() {
-    this.birthTime = undefined
-  }
-
-  public get data() {
+  /**
+   * Создает FormBuilder для использования с conversation.form.build()
+   */
+  static toFormBuilder() {
     return {
-      birthTime: this.birthTime,
-    }
-  }
+      collationKey: 'form-birth-time',
+      validate: async (ctx: Context): Promise<FormValidateResult<string | null>> => {
+        const text = (ctx.message ?? ctx.channelPost)?.text
+        if (!text)
+          return { ok: false }
 
-  public message(ctx: Context) {
-    return ctx.reply(ctx.t('onboarding-birth-time'), {
-      reply_markup: createBirthTimeKeyboard(ctx),
-    })
-  }
+        try {
+          const step = plainToInstance(BirthTimeStep, { birthTime: text })
+          await validateOrReject(step)
 
-  public async validate(ctx: Context) {
-    try {
-      await validateOrReject(this)
-    }
-    catch (err) {
-      ctx.logger.error(err)
-      await ctx.reply(ctx.t('onboarding-birth-time-invalid'))
-      throw err
+          return { ok: true, value: step.birthTime || null }
+        }
+        catch (err) {
+          ctx.logger.error(err)
+          return { ok: false }
+        }
+      },
+      otherwise: async (ctx: Context) => {
+        await ctx.reply(ctx.t('onboarding-birth-time-invalid'))
+      },
     }
   }
 }

@@ -12,6 +12,7 @@ const baseConfigSchema = v.object({
   backendUrl: v.optional(v.string(), 'http://localhost:3000/api/'),
   hmacSecret: v.string(),
   appHeaderLanguage: v.optional(v.string(), 'x-custom-lang'),
+  twoGisApiKey: v.string(),
 })
 
 const configSchema = v.variant('botMode', [

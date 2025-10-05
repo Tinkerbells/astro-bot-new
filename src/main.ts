@@ -1,5 +1,6 @@
 #!/usr/bin/env tsx
 /* eslint-disable antfu/no-top-level-await */
+import 'reflect-metadata'
 
 import type { RunnerHandle } from '@grammyjs/runner'
 

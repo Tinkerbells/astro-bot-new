@@ -1,11 +1,9 @@
-import type { CityData } from '../constants.js'
+import { City } from '#root/domain/entities/index.js'
 
-import { POPULAR_RUSSIAN_CITIES } from '../constants.js'
-
-export function findCityByText(text: string): CityData | undefined {
+export function findCityByText(text: string): City | undefined {
   const searchText = text.toLowerCase().trim()
-  return POPULAR_RUSSIAN_CITIES.find(city =>
-    city.city.toLowerCase().includes(searchText)
-    || searchText.includes(city.city.toLowerCase()),
+  return City.popularRussianCities.find(city =>
+    city.name.toLowerCase().includes(searchText)
+    || searchText.includes(city.name.toLowerCase()),
   )
 }

@@ -13,8 +13,8 @@ export const userNetworkSources = {
     return apiHttpClient.get<User>(`/v1/users/social/${dto.socialId}/telegram`)
   },
 
-  update: (dto: UserNetworkSourcesDTO.UpdateUserDTO) => {
-    return apiHttpClient.patch<User>(`/v1/users/${dto.id}`, dto)
+  update: (params: UserNetworkSourcesDTO.UpdateUserInputDTO, dto: UserNetworkSourcesDTO.UpdateUserDTO) => {
+    return apiHttpClient.patch<User>(`/v1/users/${params.id}`, dto)
   },
 }
 

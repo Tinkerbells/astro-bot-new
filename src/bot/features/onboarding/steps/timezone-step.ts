@@ -4,11 +4,15 @@ import { Expose, Transform } from 'class-transformer'
 import { IsNotEmpty, IsNumber, IsOptional, IsString, registerDecorator, validateOrReject } from 'class-validator'
 
 import type { Context } from '#root/bot/context.js'
+import type { City } from '#root/domain/entities/index.js'
 
-import type { CityData } from '../constants.js'
+import { safe } from '#root/shared/safe/index.js'
+import { cityService } from '#root/bot/services/city-service/index.js'
+
 import type { OnboardingStep } from './step.types.js'
 
 import { findCityByText } from '../utils/city-utils.js'
+import { parseCoordinates } from '../utils/coordinates-utils.js'
 import { isValidTimezone as validateTimezone } from '../utils/timezone-utils.js'
 import { createCitiesInlineKeyboard, createLocationRequestKeyboard } from '../keyboards.js'
 
@@ -63,30 +67,67 @@ export class TimezoneStep implements OnboardingStep<TimezoneData> {
   @IsNumber()
   longitude?: number
 
-  public init(input: string) {
+  public async init(input: string) {
     this.city = undefined
     this.latitude = undefined
     this.longitude = undefined
-    const cityOption = findCityByText(input)
 
-    // Set properties after super()
-    if (cityOption) {
-      this.city = cityOption.city
-      this.timezone = cityOption.timezone
-      this.latitude = cityOption.latitude
-      this.longitude = cityOption.longitude
+    // Сначала пытаемся найти в популярных городах
+    const localCity = findCityByText(input)
+    if (localCity) {
+      this.city = localCity.name
+      this.timezone = localCity.timezone || ''
+      this.latitude = localCity.lat
+      this.longitude = localCity.lon
+      return
     }
-    else {
+
+    // Затем ищем через Geocoding API
+    const [error, cities] = await safe(cityService.searchCities(input))
+    if (!error && cities && cities.length > 0) {
+      const foundCity = cities[0]
+      this.city = foundCity.name
+      this.timezone = foundCity.timezone || ''
+      this.latitude = foundCity.lat
+      this.longitude = foundCity.lon
+      return
+    }
+
+    // Проверяем, не ввел ли пользователь координаты напрямую
+    const coordinates = parseCoordinates(input)
+    if (coordinates) {
+      // Пытаемся получить информацию о месте по координатам через обратное геокодирование
+      const [reverseError, city] = await safe(
+        cityService.getCityByCoordinates(coordinates.lat, coordinates.lon),
+      )
+      if (!reverseError && city) {
+        this.city = city.name
+        this.timezone = city.timezone || ''
+        this.latitude = coordinates.lat
+        this.longitude = coordinates.lon
+        return
+      }
+      // Если не удалось получить город, сохраняем только координаты
+      this.latitude = coordinates.lat
+      this.longitude = coordinates.lon
+      // timezone будет нужно задать вручную или получить из координат
       this.timezone = input.trim()
+      return
     }
+
+    // Fallback: считаем что пользователь ввел timezone вручную
+    this.timezone = input.trim()
   }
 
-  public setCity(cityData: CityData) {
-    this.city = cityData.city
-    this.timezone = cityData.timezone
-    this.latitude = cityData.latitude
-    this.longitude = cityData.longitude
+  public setCity(city: City) {
+    this.city = city.name
+    this.timezone = city.timezone || ''
+    this.latitude = city.lat
+    this.longitude = city.lon
   }
+
+  // TODO: добавить лучший способ
+  skip = null
 
   public get data() {
     return {
