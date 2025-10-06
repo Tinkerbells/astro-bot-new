@@ -2,7 +2,7 @@ import { Composer } from 'grammy'
 
 import type { Context } from '#root/bot/context.js'
 
-import { profileMenu } from './menu.js'
+import { createProfileMessage, profileMenu } from './menu.js'
 
 export const composer = new Composer<Context>()
 
@@ -21,24 +21,13 @@ feature.command('profile', async (ctx) => {
   }
 
   // Получаем знак зодиака если он есть
-  let zodiacText = ctx.t('profile-field-missing')
+  let zodiacText: string | undefined
   if (user.zodiac) {
     zodiacText = `${user.zodiac.icon} ${ctx.t(user.zodiac.getI18nKey())}`
   }
 
-  // Форматируем информацию о пользователе
-  const profileInfo = ctx.t('profile-info', {
-    name: user.firstName || ctx.t('profile-field-missing'),
-    birthDate: user.birthDate || ctx.t('profile-field-missing'),
-    birthTime: user.birthTime || ctx.t('profile-field-missing'),
-    timezone: user.timezone || ctx.t('profile-field-missing'),
-    city: ctx.t('profile-field-missing'), // TODO: добавить city когда появится в User
-    zodiac: zodiacText,
-  })
-
-  await ctx.reply(`${ctx.t('profile-title')}\n\n${profileInfo}`, {
-    reply_markup: profileMenu,
-  })
+  const message = createProfileMessage({ ctx, user, zodiacText })
+  await message.send()
 })
 
 export { composer as profileFeature }

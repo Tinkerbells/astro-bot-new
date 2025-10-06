@@ -2,8 +2,8 @@ import { Composer } from 'grammy'
 
 import type { Context } from '#root/bot/context.js'
 
-import { i18n } from '#root/bot/i18n.js'
 import { logHandle } from '#root/bot/shared/helpers/logging.js'
+import { i18n } from '#root/bot/services/i18n-service/index.js'
 
 import { changeLanguageData } from './callback-data.js'
 import { createChangeLanguageKeyboard } from './keyboards.js'

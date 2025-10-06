@@ -2,10 +2,9 @@ import { Expose, plainToInstance, Transform } from 'class-transformer'
 import { IsNotEmpty, IsString, Matches, validateOrReject } from 'class-validator'
 
 import type { Context } from '#root/bot/context.js'
+import type { FormValidateResult } from '#root/bot/shared/helpers/form-utils.js'
 
 import { parseBirthDateInput } from '../utils/date-utils.js'
-
-type FormValidateResult<T> = { ok: false, error: unknown } | { ok: true, value: T }
 
 export class BirthDateStep {
   @Expose()

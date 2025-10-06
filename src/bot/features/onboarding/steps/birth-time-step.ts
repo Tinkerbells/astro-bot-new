@@ -4,10 +4,9 @@ import { Expose, plainToInstance, Transform } from 'class-transformer'
 import { IsNotEmpty, IsOptional, IsString, Matches, validateOrReject } from 'class-validator'
 
 import type { Context } from '#root/bot/context.js'
+import type { FormValidateResult } from '#root/bot/shared/helpers/form-utils.js'
 
 dayjs.extend(customParseFormat)
-
-type FormValidateResult<T> = { ok: false, error: unknown } | { ok: true, value: T }
 
 export class BirthTimeStep {
   @Expose()
@@ -41,12 +40,12 @@ export class BirthTimeStep {
   }
 
   /**
-   * Создает FormBuilder для использования с conversation.form.build()
+   * Создает FormBuilder для использования с buildOptionalField()
    */
   static toFormBuilder() {
     return {
       collationKey: 'form-birth-time',
-      validate: async (ctx: Context): Promise<FormValidateResult<string | null>> => {
+      validate: async (ctx: Context): Promise<FormValidateResult<string>> => {
         const text = (ctx.message ?? ctx.channelPost)?.text
         if (!text)
           return { ok: false, error: 'No text message' }
@@ -55,7 +54,10 @@ export class BirthTimeStep {
           const step = plainToInstance(BirthTimeStep, { birthTime: text })
           await validateOrReject(step)
 
-          return { ok: true, value: step.birthTime || null }
+          if (!step.birthTime)
+            return { ok: false, error: 'Birth time is required' }
+
+          return { ok: true, value: step.birthTime }
         }
         catch (err) {
           ctx.logger.error(err)

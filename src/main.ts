@@ -13,7 +13,8 @@ import { createBot } from '#root/bot/index.js'
 import { config } from '#root/shared/config.js'
 import { logger } from '#root/shared/logger.js'
 import { createServer, createServerManager } from '#root/server/index.js'
-import { createUserService } from '#root/application/user-service/index.js'
+
+import { createUserService } from './bot/services/user-service/index.js'
 
 // Create shared dependencies
 const userService = createUserService()

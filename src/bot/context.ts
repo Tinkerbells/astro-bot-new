@@ -8,7 +8,8 @@ import type { Context as DefaultContext, SessionFlavor } from 'grammy'
 import type { Config } from '#root/shared/config.js'
 import type { Logger } from '#root/shared/logger.js'
 import type { User } from '#root/domain/entities/user/user.js'
-import type { OnboardingState } from '#root/application/onboarding-service/index.js'
+
+import type { OnboardingState } from './shared/types/onboarding.types.js'
 
 export type SessionData = {
   user: User

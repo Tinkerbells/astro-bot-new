@@ -5,8 +5,5 @@ export enum OnboardingStatus {
 }
 
 export type OnboardingState = {
-  totalSteps: number
   status: OnboardingStatus
-  current: number
-  stepsData: Record<string, unknown>[]
 }

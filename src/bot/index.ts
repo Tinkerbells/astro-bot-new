@@ -12,12 +12,11 @@ import { hydrateReply, parseMode } from '@grammyjs/parse-mode'
 import type { Config } from '#root/shared/config.js'
 import type { Logger } from '#root/shared/logger.js'
 import type { Context, SessionData } from '#root/bot/context.js'
-import type { UserService } from '#root/application/user-service/index.js'
 
-// import { i18n, isMultipleLocales } from '#root/bot/i18n.js'
-import { i18n } from '#root/bot/i18n.js'
 import { createRedisClient } from '#root/shared/index.js'
 import { errorHandler } from '#root/bot/handlers/error.js'
+// import { i18n, isMultipleLocales } from '#root/bot/i18n.js'
+import { i18n } from '#root/bot/services/i18n-service/i18n.js'
 import { adminFeature } from '#root/bot/features/admin/index.js'
 import { session } from '#root/bot/shared/middlewares/session.js'
 import { profileFeature } from '#root/bot/features/profile/index.js'
@@ -25,8 +24,11 @@ import { profileFeature } from '#root/bot/features/profile/index.js'
 import { unhandledFeature } from '#root/bot/features/unhandled/index.js'
 import { onboardingFeature } from '#root/bot/features/onboarding/index.js'
 import { updateLogger } from '#root/bot/shared/middlewares/update-logger.js'
-import { OnboardingStatus } from '#root/application/onboarding-service/index.js'
 import { createUserSessionMiddleware } from '#root/bot/shared/middlewares/user.js'
+
+import type { UserService } from './services/user-service/index.js'
+
+import { OnboardingStatus } from './shared/types/onboarding.types.js'
 
 type Dependencies = {
   config: Config

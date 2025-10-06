@@ -1,7 +1,11 @@
 import type { NextFunction } from 'grammy'
 
+import { plainToClass } from 'class-transformer'
+
 import type { Context } from '#root/bot/context.js'
-import type { UserService } from '#root/application/user-service/index.js'
+import type { UserService } from '#root/bot/services/user-service/index.js'
+
+import { User, Zodiac } from '#root/domain/entities/index.js'
 
 export function createUserSessionMiddleware(userService: UserService) {
   return async (ctx: Context, next: NextFunction): Promise<void> => {
@@ -34,6 +38,12 @@ export function createUserSessionMiddleware(userService: UserService) {
       }
     }
     else {
+      // Сериализуем
+      const persistUser = plainToClass(User, ctx.session.user)
+      if (persistUser.zodiacId) {
+        persistUser.zodiac = Zodiac.getByIndex(persistUser.zodiacId)
+      }
+      ctx.session.user = persistUser
       ctx.logger.debug({ userId: ctx.session.user.id, socialId: ctx.session.user.socialId }, 'Пользователь загружен из сессии')
     }
 

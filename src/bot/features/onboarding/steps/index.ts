@@ -1,5 +1,3 @@
 export { BirthDateStep } from './birth-date-step.js'
+export { type BirthPlaceData, BirthPlaceStep } from './birth-place-step.js'
 export { BirthTimeStep } from './birth-time-step.js'
-export type { OnboardingStep } from './step.types.js'
-export { OnboardingSteps } from './step.types.js'
-export { TimezoneStep } from './timezone-step.js'

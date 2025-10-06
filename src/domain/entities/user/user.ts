@@ -101,6 +101,10 @@ export class User {
   @IsDate()
   updatedAt!: Date
 
+  constructor(user: Partial<User>) {
+    Object.assign(this, user)
+  }
+
   static convertBirthTimeToUTC(
     birthDateISO?: string,
     birthTime?: string,

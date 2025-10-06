@@ -3,8 +3,8 @@ import { InlineKeyboard } from 'grammy'
 
 import type { Context } from '#root/bot/context.js'
 
-import { i18n } from '#root/bot/i18n.js'
 import { chunk } from '#root/bot/shared/helpers/keyboard.js'
+import { i18n } from '#root/bot/services/i18n-service/index.js'
 
 import { changeLanguageData } from './callback-data.js'
 
