@@ -1,11 +1,13 @@
+import type { Logger } from 'pino'
+
 import { Expose } from 'class-transformer'
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator'
 
 import type { Context } from '#root/bot/context.js'
-import type { FormValidateResult } from '#root/bot/shared/helpers/form-utils.js'
+import type { FormValidateResultWithReason } from '#root/bot/shared/helpers/form.js'
 
-import { safe } from '#root/shared/safe/index.js'
 import { City } from '#root/domain/entities/city/city.js'
+import { safeAsync } from '#root/shared/safe-async/index.js'
 import { cityService } from '#root/bot/services/city-service/index.js'
 
 import { findCityByText } from '../utils/city-utils.js'
@@ -63,7 +65,7 @@ export class BirthPlaceStep {
   /**
    * Обрабатывает текстовый ввод: название города или координаты
    */
-  static async handleTextInput(input: string): Promise<BirthPlaceData | null> {
+  static async handleTextInput(input: string, logger?: Logger): Promise<BirthPlaceData | null> {
     const trimmed = input.trim()
 
     // 1. Проверяем локальную базу популярных городов
@@ -78,8 +80,14 @@ export class BirthPlaceStep {
     }
 
     // 2. Ищем через Geocoding API
-    const [apiError, cities] = await safe(cityService.searchCities(trimmed))
-    if (!apiError && cities && cities.length > 0) {
+    const [apiError, cities] = await safeAsync(cityService.searchCities(trimmed))
+
+    if (apiError) {
+      logger?.error({ error: apiError, input: trimmed }, 'Failed to search city via Geocoding API')
+      return null
+    }
+
+    if (cities && cities.length > 0) {
       const foundCity = cities[0]
       return {
         city: foundCity.name,
@@ -110,7 +118,7 @@ export class BirthPlaceStep {
   static toFormBuilder() {
     return {
       collationKey: 'form-birth-place',
-      validate: async (ctx: Context): Promise<FormValidateResult<BirthPlaceData>> => {
+      validate: async (ctx: Context): Promise<FormValidateResultWithReason<BirthPlaceData, string>> => {
         // Обработка callback_query от Inline кнопок с городами
         if (ctx.callbackQuery?.data?.startsWith('onboarding:timezone:city:')) {
           await ctx.answerCallbackQuery()
@@ -145,7 +153,7 @@ export class BirthPlaceStep {
 
         // Обработка текстового ввода
         if (ctx.message?.text) {
-          const result = await BirthPlaceStep.handleTextInput(ctx.message.text)
+          const result = await BirthPlaceStep.handleTextInput(ctx.message.text, ctx.logger)
 
           if (!result) {
             // Город не найден - предлагаем ввести координаты
@@ -157,7 +165,7 @@ export class BirthPlaceStep {
 
         return { ok: false, error: 'No valid input' }
       },
-      otherwise: async (ctx: Context, error?: unknown) => {
+      otherwise: async (ctx: Context, error: string) => {
         if (error === 'city_not_found') {
           await ctx.reply(ctx.t('onboarding-location-not-found-try-coordinates'))
         }
@@ -174,7 +182,7 @@ export class BirthPlaceStep {
   static toCoordinatesFormBuilder() {
     return {
       collationKey: 'form-birth-place-coordinates',
-      validate: async (ctx: Context): Promise<FormValidateResult<BirthPlaceData>> => {
+      validate: async (ctx: Context): Promise<FormValidateResultWithReason<BirthPlaceData, string>> => {
         if (!ctx.message?.text)
           return { ok: false, error: 'No text message' }
 
@@ -185,7 +193,7 @@ export class BirthPlaceStep {
 
         return { ok: true, value: result }
       },
-      otherwise: async (ctx: Context) => {
+      otherwise: async (ctx: Context, _error: string) => {
         await ctx.reply(ctx.t('onboarding-coordinates-invalid'))
       },
     }

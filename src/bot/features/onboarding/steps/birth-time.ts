@@ -4,7 +4,7 @@ import { Expose, plainToInstance, Transform } from 'class-transformer'
 import { IsNotEmpty, IsOptional, IsString, Matches, validateOrReject } from 'class-validator'
 
 import type { Context } from '#root/bot/context.js'
-import type { FormValidateResult } from '#root/bot/shared/helpers/form-utils.js'
+import type { FormValidateResult } from '#root/bot/shared/helpers/form.js'
 
 dayjs.extend(customParseFormat)
 
@@ -60,7 +60,7 @@ export class BirthTimeStep {
           return { ok: true, value: step.birthTime }
         }
         catch (err) {
-          ctx.logger.error(err)
+          ctx.logger.error({ error: err }, 'Birth time validation failed')
           return { ok: false, error: err }
         }
       },

@@ -1,8 +1,10 @@
+import type { FormBuilder } from '@grammyjs/conversations'
+
 import { Expose, plainToInstance, Transform } from 'class-transformer'
 import { IsNotEmpty, IsString, Matches, validateOrReject } from 'class-validator'
 
 import type { Context } from '#root/bot/context.js'
-import type { FormValidateResult } from '#root/bot/shared/helpers/form-utils.js'
+import type { FormValidateResult } from '#root/bot/shared/helpers/form.js'
 
 import { parseBirthDateInput } from '../utils/date-utils.js'
 
@@ -19,7 +21,7 @@ export class BirthDateStep {
   /**
    * Создает FormBuilder для использования с conversation.form.build()
    */
-  static toFormBuilder() {
+  static toFormBuilder(): FormBuilder<Context, string> {
     return {
       collationKey: 'form-birth-date',
       validate: async (ctx: Context): Promise<FormValidateResult<string>> => {
@@ -34,12 +36,8 @@ export class BirthDateStep {
           return { ok: true, value: step.birthDate }
         }
         catch (err) {
-          ctx.logger.error(err)
           return { ok: false, error: err }
         }
-      },
-      action: async (ctx: Context) => {
-        await ctx.reply(ctx.t('onboarding-birth-date-received'))
       },
       otherwise: async (ctx: Context) => {
         await ctx.reply(ctx.t('onboarding-birth-date-invalid'))
