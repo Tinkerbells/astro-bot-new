@@ -42,6 +42,18 @@ export class UserService {
       return await this.registerUser(dto)
     }
   }
+
+  public async updateUser(
+    params: UserRepositoryDTO.UpdateUserInputDTO,
+    dto: UserRepositoryDTO.UpdateUserDTO,
+  ): Promise<User> {
+    try {
+      return await this.userRepository.update(params, dto)
+    }
+    catch (error) {
+      throw new Error(`Не удалось обновить пользователя: ${error}`)
+    }
+  }
 }
 
 export function createUserService(): UserService {
