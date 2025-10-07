@@ -19,11 +19,11 @@ import { errorHandler } from '#root/bot/handlers/error.js'
 import { i18n } from '#root/bot/services/i18n-service/i18n.js'
 import { adminFeature } from '#root/bot/features/admin/index.js'
 import { session } from '#root/bot/shared/middlewares/session.js'
-import { profileFeature } from '#root/bot/features/profile/index.js'
 // import { languageFeature } from '#root/bot/features/language/index.js'
 import { unhandledFeature } from '#root/bot/features/unhandled/index.js'
 import { onboardingFeature } from '#root/bot/features/onboarding/index.js'
 import { updateLogger } from '#root/bot/shared/middlewares/update-logger.js'
+import { profileFeature, profileMenu } from '#root/bot/features/profile/index.js'
 import { createUserSessionMiddleware } from '#root/bot/shared/middlewares/user.js'
 
 import type { UserService } from './services/user-service/index.js'
@@ -57,6 +57,7 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
 
   bot.use(async (ctx, next) => {
     ctx.config = config
+    ctx.userService = userService
     ctx.logger = logger.child({
       update_id: ctx.update.update_id,
     })
@@ -94,15 +95,19 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
   }))
   protectedBot.use(i18n)
   // Устанавливаем русский язык по умолчанию для всех пользователей
-  protectedBot.use(async (ctx, next) => {
-    // Проверяем текущую локаль и если она не установлена или не 'ru', устанавливаем 'ru'
-    const currentLocale = await ctx.i18n.getLocale()
-    if (currentLocale !== 'ru') {
-      await ctx.i18n.setLocale('ru')
-    }
-    await next()
-  })
+  // protectedBot.use(async (ctx, next) => {
+  //   // Проверяем текущую локаль и если она не установлена или не 'ru', устанавливаем 'ru'
+  //   const currentLocale = await ctx.i18n.getLocale()
+  //   if (currentLocale !== 'ru') {
+  //     await ctx.i18n.setLocale('ru')
+  //   }
+  //   await next()
+  // })
   protectedBot.use(createUserSessionMiddleware(userService))
+
+  // Регистрируем меню ДО conversations, чтобы conversation.menu() работало
+  protectedBot.use(profileMenu)
+
   protectedBot.use(conversations<Context, Context>({
     storage: {
       type: 'key',
@@ -114,8 +119,16 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
       getStorageKey: getUserConversationKey,
     },
     plugins: [
-      i18n.middleware(),
+      // Добавляем config, logger и userService в контекст диалога
+      async (ctx, next) => {
+        ctx.config = config
+        ctx.logger = logger.child({
+          update_id: ctx.update.update_id,
+        })
+        await next()
+      },
       hydrate(),
+      i18n.middleware(),
     ],
   }))
 
