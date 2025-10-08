@@ -33,7 +33,7 @@ onboarding-birth-date-invalid = ⚠️ That date looks off. Try DD.MM.YYYY or DD
 onboarding-birth-time = ⏰ Great! Now enter the birth time in HH:MM or HH-MM (e.g. 14:30). You can skip if you're unsure.
 onboarding-birth-time-received = ✅ Birth time received!
 onboarding-birth-time-invalid = ⚠️ I couldn't read the time. Use HH:MM or HH-MM (e.g. 14:30).
-onboarding-birth-time-skipped = ⏭️ Skipping the birth time for now. I'll assume 00:00 so we can finish your profile.
+onboarding-birth-time-skipped = ⏭️ Birth time skipped.
 onboarding-location = 🗺️ Where were you born? Choose a city below, share your location, or type the name manually.
 onboarding-location-custom = ✍️ Type the name of your birth city
 onboarding-location-invalid = ⚠️ Please share your location or enter a city name.
@@ -101,6 +101,11 @@ profile-restart-onboarding-message = 🔄 Restarting registration...
 
 profile-field-missing = —
 
+## Buttons
+
+button-skip = ⏭️ Skip
+
 ## Error Messages
 
 errors-user-load-failed = Failed to load user data. Please try again later.
+errors-something-went-wrong = ⚠️ Something went wrong. Please try again or return to /start
