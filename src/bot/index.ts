@@ -28,6 +28,7 @@ import { createUserSessionMiddleware } from '#root/bot/shared/middlewares/user.j
 
 import type { UserService } from './services/user-service/index.js'
 
+import { safeReply } from './shared/helpers/safe-reply/index.js'
 import { OnboardingStatus } from './shared/types/onboarding.types.js'
 
 type Dependencies = {
@@ -61,6 +62,7 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
     ctx.logger = logger.child({
       update_id: ctx.update.update_id,
     })
+    ctx.safeReply = safeReply(ctx)
 
     await next()
   })
@@ -125,6 +127,7 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
         ctx.logger = logger.child({
           update_id: ctx.update.update_id,
         })
+        ctx.safeReply = safeReply(ctx)
         await next()
       },
       hydrate(),
