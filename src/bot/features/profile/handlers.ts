@@ -2,28 +2,14 @@ import { Composer } from 'grammy'
 
 import type { Context } from '#root/bot/context.js'
 
-import { createProfileMessage } from './menu.js'
+import { createProfileMessage } from './utils/index.js'
 
 export const composer = new Composer<Context>()
 
 const feature = composer.chatType('private')
 
-// Обработчик команды /profile
 feature.command('profile', async (ctx) => {
-  const user = ctx.session.user
-
-  if (!user) {
-    await ctx.reply(ctx.t('errors-user-load-failed'))
-    return
-  }
-
-  // Получаем знак зодиака если он есть
-  let zodiacText: string | undefined
-  if (user.zodiac) {
-    zodiacText = `${user.zodiac.icon} ${ctx.t(user.zodiac.getI18nKey())}`
-  }
-
-  const message = createProfileMessage({ ctx, user, zodiacText })
+  const message = createProfileMessage(ctx)
   await message.send()
 })
 
