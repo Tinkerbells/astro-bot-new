@@ -2,14 +2,11 @@ import { Composer } from 'grammy'
 
 import type { Context } from '#root/bot/context.js'
 
-import { createProfileMessage, profileMenu } from './menu.js'
+import { createProfileMessage } from './menu.js'
 
 export const composer = new Composer<Context>()
 
 const feature = composer.chatType('private')
-
-// Устанавливаем меню как middleware
-feature.use(profileMenu)
 
 // Обработчик команды /profile
 feature.command('profile', async (ctx) => {
