@@ -10,12 +10,13 @@ import type { Logger } from '#root/shared/logger.js'
 import type { User } from '#root/domain/entities/user/user.js'
 import type { UserService } from '#root/bot/services/user-service/index.js'
 
-import type { SafeReply } from './shared/helpers/safe-reply/index.js'
+import type { SafeReply } from './shared/helpers/safe-reply.js'
 import type { OnboardingState } from './shared/types/onboarding.types.js'
 
 export type SessionData = {
   user: User
   onboarding: OnboardingState
+  __language_code?: string
 }
 
 type ExtendedContextFlavor = {

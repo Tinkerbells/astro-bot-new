@@ -34,6 +34,7 @@ export class Zodiac {
   id: number
   name: ZodiacSigsName
   icon: string
+  i18key: string
 
   constructor(zodiac: Partial<Zodiac>) {
     Object.assign(this, zodiac)
@@ -43,15 +44,12 @@ export class Zodiac {
     return this.icon
   }
 
-  public getI18nKey(): string {
-    return `zodiac-${this.name}`
-  }
-
   static getByIndex(index: number) {
     const signs = Object.keys(ZodiacSigns) as ZodiacSigsName[]
     const zeroBasedIndex = index >= 1 && index <= 12 ? index - 1 : index
     const name = signs[zeroBasedIndex]
     const icon = ZodiacIcons[name]
-    return new Zodiac({ id: index, name, icon })
+    const i18key = `zodiac-${name}`
+    return new Zodiac({ id: index, name, icon, i18key })
   }
 }
