@@ -6,13 +6,15 @@ import { User } from '#root/domain/entities/user/user.js'
 import { safeAsync } from '#root/shared/safe-async/safe-async.js'
 import { updateSessionUser } from '#root/bot/shared/helpers/user.js'
 import { buildOptionalField } from '#root/bot/shared/helpers/form.js'
-import { createProfileMessage } from '#root/bot/features/profile/menu.js'
 import { OnboardingStatus } from '#root/bot/shared/types/onboarding.types.js'
 import { updateOnboardingStatus } from '#root/bot/shared/helpers/onboarding.js'
+import { setConversationLocale } from '#root/bot/shared/helpers/conversation-locale.js'
 
 import type { BirthPlaceData } from './steps/birth-place.js'
 
+import { PROFILE_MENU_ID } from '../profile/menu.js'
 import { BirthDateStep, BirthPlaceStep, BirthTimeStep } from './steps/index.js'
+import { buildProfileMenuRange, createProfileMessage } from '../profile/utils/index.js'
 import { createBirthTimeKeyboard, createCitiesInlineKeyboard, createLocationRequestKeyboard } from './keyboards.js'
 
 export const ONBOARDING_CONVERSATION = 'onboarding'
@@ -23,6 +25,7 @@ export async function onboarding(
   conversation: Conversation<Context, Context>,
   ctx: Context,
 ) {
+  await setConversationLocale(conversation, ctx)
   // Обновляем статус онбординга на "В процессе"
   await conversation.external((ctx) => {
     updateOnboardingStatus(ctx, OnboardingStatus.InProgress)
@@ -134,23 +137,18 @@ export async function onboarding(
     updateOnboardingStatus(ctx, OnboardingStatus.Completed)
   })
 
-  // TODO: тут кажется можно заменить все одним ctx.safeReply
-  const [messageError, completeMessage] = await safeAsync(
-    conversation.external((ctx) => {
-      const { ctx: _, ...options } = { ctx, user: updatedUser }
-      return createProfileMessage({ ctx, ...options }).getText()
-    }),
-  )
+  // Удаляем reply клавиатуру (geo request) перед отправкой меню профиля
+  await ctx.reply(ctx.t('onboarding-complete'), {
+    reply_markup: { remove_keyboard: true },
+  })
 
-  if (messageError || !completeMessage) {
-    await conversation.external(ctx =>
-      ctx.logger.error({ error: messageError }, 'Failed to create profile message'),
-    )
-    await ctx.safeReply(ctx.t('onboarding-complete'))
-    // Выход из conversation - завершаем диалог с fallback сообщением
-    return
-  }
+  // Создаем меню для conversation и отправляем сообщение с профилем
+  const message = await conversation.external(ctx => createProfileMessage(ctx).getText())
+  const menu = conversation.menu(PROFILE_MENU_ID).dynamic((_, range) => {
+    buildProfileMenuRange(range)
+  })
 
-  // Отправляем финальное сообщение с профилем пользователя
-  await ctx.safeReply(completeMessage)
+  await ctx.safeReply(message, {
+    reply_markup: menu,
+  })
 }

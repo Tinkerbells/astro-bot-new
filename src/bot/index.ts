@@ -5,9 +5,9 @@ import { hydrate } from '@grammyjs/hydrate'
 import { Bot as TelegramBot } from 'grammy'
 import { sequentialize } from '@grammyjs/runner'
 import { RedisAdapter } from '@grammyjs/storage-redis'
-import { conversations } from '@grammyjs/conversations'
 import { autoChatAction } from '@grammyjs/auto-chat-action'
 import { hydrateReply, parseMode } from '@grammyjs/parse-mode'
+import { conversations, createConversation } from '@grammyjs/conversations'
 
 import type { Config } from '#root/shared/config.js'
 import type { Logger } from '#root/shared/logger.js'
@@ -21,14 +21,14 @@ import { adminFeature } from '#root/bot/features/admin/index.js'
 import { session } from '#root/bot/shared/middlewares/session.js'
 // import { languageFeature } from '#root/bot/features/language/index.js'
 import { unhandledFeature } from '#root/bot/features/unhandled/index.js'
-import { onboardingFeature } from '#root/bot/features/onboarding/index.js'
 import { updateLogger } from '#root/bot/shared/middlewares/update-logger.js'
 import { profileFeature, profileMenu } from '#root/bot/features/profile/index.js'
 import { createUserSessionMiddleware } from '#root/bot/shared/middlewares/user.js'
+import { onboarding, ONBOARDING_CONVERSATION, onboardingFeature } from '#root/bot/features/onboarding/index.js'
 
 import type { UserService } from './services/user-service/index.js'
 
-import { safeReply } from './shared/helpers/safe-reply/index.js'
+import { safeReply } from './shared/helpers/safe-reply.js'
 import { OnboardingStatus } from './shared/types/onboarding.types.js'
 
 type Dependencies = {
@@ -96,19 +96,16 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
     }),
   }))
   protectedBot.use(i18n)
-  // Устанавливаем русский язык по умолчанию для всех пользователей
-  // protectedBot.use(async (ctx, next) => {
-  //   // Проверяем текущую локаль и если она не установлена или не 'ru', устанавливаем 'ru'
-  //   const currentLocale = await ctx.i18n.getLocale()
-  //   if (currentLocale !== 'ru') {
-  //     await ctx.i18n.setLocale('ru')
-  //   }
-  //   await next()
-  // })
+  // TODO: когда будет мультиязычный бот убрать
+  protectedBot.use(async (ctx, next) => {
+    // Проверяем текущую локаль и если она не установлена или не 'ru', устанавливаем 'ru'
+    const currentLocale = await ctx.i18n.getLocale()
+    if (currentLocale !== 'ru') {
+      await ctx.i18n.setLocale('ru')
+    }
+    await next()
+  })
   protectedBot.use(createUserSessionMiddleware(userService))
-
-  // Регистрируем меню ДО conversations, чтобы conversation.menu() работало
-  protectedBot.use(profileMenu)
 
   protectedBot.use(conversations<Context, Context>({
     storage: {
@@ -122,6 +119,7 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
     },
     plugins: [
       // Добавляем config, logger и userService в контекст диалога
+      hydrate(),
       async (ctx, next) => {
         ctx.config = config
         ctx.logger = logger.child({
@@ -130,14 +128,20 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
         ctx.safeReply = safeReply(ctx)
         await next()
       },
-      hydrate(),
       i18n.middleware(),
     ],
   }))
 
+  // Сначала регистрируем все conversations
+  protectedBot.use(createConversation(onboarding, ONBOARDING_CONVERSATION))
+
+  // Потом регистрируем меню (которые используют conversations)
+  protectedBot.use(profileMenu)
+
+  protectedBot.use(profileFeature)
+
   // Handlers
   protectedBot.use(onboardingFeature)
-  protectedBot.use(profileFeature)
   protectedBot.use(adminFeature)
   // TODO: добавить, когда появится жесткая необходимость
   // if (isMultipleLocales)
