@@ -27,8 +27,8 @@ importers:
         specifier: ^1.3.1
         version: 1.3.1(grammy@1.35.0)
       '@grammyjs/parse-mode':
-        specifier: 1.11.1
-        version: 1.11.1(grammy@1.35.0)
+        specifier: 2.1.2
+        version: 2.1.2(grammy@1.35.0)
       '@grammyjs/runner':
         specifier: 2.0.3
         version: 2.0.3(grammy@1.35.0)
@@ -478,8 +478,8 @@ packages:
     peerDependencies:
       grammy: ^1.31.0
 
-  '@grammyjs/parse-mode@1.11.1':
-    resolution: {integrity: sha512-7yEKVtXjNZsG8EX/AOtgR/7Af5QxcmAcTB31Nju+QELvL2uSQMJKlix5rkx695gqocUodLwWtuwCDGDoXGD2xg==}
+  '@grammyjs/parse-mode@2.1.2':
+    resolution: {integrity: sha512-WyIUqoW4rKj4ktyX8lzbpDaF87w3troekdYjaeigwWItQsxEgBa1gVRc+gAH5369Pm7tOh1MTYD1+TF13WqmeA==}
     engines: {node: '>=14.13.1'}
     peerDependencies:
       grammy: ^1.20.1
@@ -2755,7 +2755,7 @@ snapshots:
     dependencies:
       grammy: 1.35.0
 
-  '@grammyjs/parse-mode@1.11.1(grammy@1.35.0)':
+  '@grammyjs/parse-mode@2.1.2(grammy@1.35.0)':
     dependencies:
       grammy: 1.35.0
 
