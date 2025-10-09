@@ -1,0 +1,10 @@
+import type { NatalChartsNetworkSourcesDTO } from '#root/data/sources/natal-charts-network-sources/index.js'
+
+export type NatalChartDTO = NatalChartsNetworkSourcesDTO.NatalChartDTO
+export type GuestNatalChartResponseDTO = NatalChartsNetworkSourcesDTO.GuestNatalChartResponseDTO
+export type GenerateGuestDTO = NatalChartsNetworkSourcesDTO.GenerateGuestDTO
+export type GenerateUserNatalChartDTO = NatalChartsNetworkSourcesDTO.GenerateUserNatalChartDTO
+export type RegenerateUserNatalChartDTO = NatalChartsNetworkSourcesDTO.RegenerateUserNatalChartDTO
+export type GetLatestForUserDTO = NatalChartsNetworkSourcesDTO.GetLatestForUserDTO
+export type GetLatestForSocialDTO = NatalChartsNetworkSourcesDTO.GetLatestForSocialDTO
+export type GetByIdDTO = NatalChartsNetworkSourcesDTO.GetByIdDTO

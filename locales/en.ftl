@@ -6,6 +6,8 @@ language =
     .description = Change language
 setcommands =
     .description = Set bot commands
+natal =
+    .description = Natal chart
 
 ## Language Feature
 
@@ -83,3 +85,27 @@ profile-field-missing = —
 ## Error Messages
 
 errors-something-went-wrong = ⚠️ Something went wrong. Please try again or return to /start
+
+## Natal Charts Feature
+
+natal-charts-menu-title = 🔮 Choose natal chart type:
+natal-charts-menu-my-chart = 🌟 My natal chart
+natal-charts-menu-get-my-chart = ✨ Get my natal chart
+natal-charts-menu-guest-chart = 👤 Guest natal chart
+natal-charts-menu-back = ◀️ Back
+natal-charts-guest-generating = 🔮 Generating guest natal chart...
+natal-charts-user-generating = 🌟 Generating your natal chart...
+natal-charts-user-fetching = 🔮 Fetching your natal chart...
+natal-charts-error = ⚠️ Failed to get natal chart. Please try later.
+natal-charts-guest-success = ✅ Guest natal chart created!
+natal-charts-user-success = ✅ Your natal chart is ready!
+natal-charts-user-missing-data = ⚠️ Please complete birth date, time, and location in your profile to get a natal chart.
+natal-charts-guest-missing-data = ⚠️ Provide birth data in your profile to request a guest natal chart.
+
+## Errors
+
+error-quota-limit = ⚠️ Request quota limit reached. Please try again later.
+
+
+## Utils
+fetching = The Universe thinks...
