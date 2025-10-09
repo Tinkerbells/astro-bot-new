@@ -19,22 +19,27 @@ import { errorHandler } from '#root/bot/handlers/error.js'
 import { i18n } from '#root/bot/services/i18n-service/i18n.js'
 import { adminFeature } from '#root/bot/features/admin/index.js'
 import { session } from '#root/bot/shared/middlewares/session.js'
+import { profileFeature } from '#root/bot/features/profile/index.js'
 // import { languageFeature } from '#root/bot/features/language/index.js'
 import { unhandledFeature } from '#root/bot/features/unhandled/index.js'
 import { updateLogger } from '#root/bot/shared/middlewares/update-logger.js'
-import { profileFeature, profileMenu } from '#root/bot/features/profile/index.js'
+import { natalChartsFeature } from '#root/bot/features/natal-charts/index.js'
 import { createUserSessionMiddleware } from '#root/bot/shared/middlewares/user.js'
 import { onboarding, ONBOARDING_CONVERSATION, onboardingFeature } from '#root/bot/features/onboarding/index.js'
 
 import type { UserService } from './services/user-service/index.js'
+import type { NatalChartsService } from './services/natal-charts-service/index.js'
 
+import { profileMenu } from './shared/menus/index.js'
 import { safeReply } from './shared/helpers/safe-reply.js'
 import { OnboardingStatus } from './shared/types/onboarding.types.js'
+import { safeReplyMarkdown } from './shared/helpers/safe-reply-markdown.js'
 
 type Dependencies = {
   config: Config
   logger: Logger
   userService: UserService
+  natalChartsService: NatalChartsService
 }
 
 function getUserSessionKey(ctx: Omit<Context, 'session'>) {
@@ -52,6 +57,7 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
     config,
     logger,
     userService,
+    natalChartsService,
   } = dependencies
 
   const bot = new TelegramBot<Context>(token, botConfig)
@@ -59,10 +65,12 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
   bot.use(async (ctx, next) => {
     ctx.config = config
     ctx.userService = userService
+    ctx.natalChartsService = natalChartsService
     ctx.logger = logger.child({
       update_id: ctx.update.update_id,
     })
     ctx.safeReply = safeReply(ctx)
+    ctx.safeReplyMarkdown = safeReplyMarkdown(ctx)
 
     await next()
   })
@@ -108,6 +116,10 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
   protectedBot.use(createUserSessionMiddleware(userService))
 
   protectedBot.use(conversations<Context, Context>({
+    // TODO: попробовать что-то придумать тут
+    // onEnter: () => {
+    //   setConversationLocale()
+    // },
     storage: {
       type: 'key',
       version: 1, // Версия для миграции данных при изменении диалогов
@@ -118,14 +130,17 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
       getStorageKey: getUserConversationKey,
     },
     plugins: [
-      // Добавляем config, logger и userService в контекст диалога
+      // Добавляем config, logger, userService и natalChartsService в контекст диалога
       hydrate(),
       async (ctx, next) => {
         ctx.config = config
+        ctx.userService = userService
+        ctx.natalChartsService = natalChartsService
         ctx.logger = logger.child({
           update_id: ctx.update.update_id,
         })
         ctx.safeReply = safeReply(ctx)
+        ctx.safeReplyMarkdown = safeReplyMarkdown(ctx)
         await next()
       },
       i18n.middleware(),
@@ -139,6 +154,7 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
   protectedBot.use(profileMenu)
 
   protectedBot.use(profileFeature)
+  protectedBot.use(natalChartsFeature)
 
   // Handlers
   protectedBot.use(onboardingFeature)

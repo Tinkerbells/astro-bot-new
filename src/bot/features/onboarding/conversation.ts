@@ -9,12 +9,11 @@ import { buildOptionalField } from '#root/bot/shared/helpers/form.js'
 import { OnboardingStatus } from '#root/bot/shared/types/onboarding.types.js'
 import { updateOnboardingStatus } from '#root/bot/shared/helpers/onboarding.js'
 import { setConversationLocale } from '#root/bot/shared/helpers/conversation-locale.js'
+import { buildProfileMenuRange, createProfileMessage, PROFILE_MENU_ID } from '#root/bot/shared/menus/index.js'
 
 import type { BirthPlaceData } from './steps/birth-place.js'
 
-import { PROFILE_MENU_ID } from '../profile/menu.js'
 import { BirthDateStep, BirthPlaceStep, BirthTimeStep } from './steps/index.js'
-import { buildProfileMenuRange, createProfileMessage } from '../profile/utils/index.js'
 import { createBirthTimeKeyboard, createCitiesInlineKeyboard, createLocationRequestKeyboard } from './keyboards.js'
 
 export const ONBOARDING_CONVERSATION = 'onboarding'

@@ -6,23 +6,7 @@ import { profileMenu } from '../menu.js'
  * Создает билдер для формирования profile сообщений
  */
 export function createProfileMessage(ctx: Context) {
-  const user = ctx.session.user
-
-  let zodiacText: string | undefined
-  if (user.zodiac) {
-    zodiacText = `${user.zodiac.icon} ${ctx.t(user.zodiac.i18key)}`
-  }
-
-  const profileInfo = ctx.t('profile-info', {
-    name: user.firstName ?? ctx.t('profile-field-missing'),
-    birthDate: user.birthDate ?? ctx.t('profile-field-missing'),
-    birthTime: user.birthTime ?? ctx.t('profile-field-missing'),
-    timezone: user.timezone ?? ctx.t('profile-field-missing'),
-    city: ctx.t('profile-field-missing'), // TODO: добавить city когда появится в User
-    zodiac: zodiacText ?? ctx.t('profile-field-missing'),
-  })
-
-  const fullMessage = profileInfo
+  const fullMessage = 'Меню'
 
   return {
     /**
@@ -62,13 +46,6 @@ export function createProfileMessage(ctx: Context) {
      */
     getText() {
       return fullMessage
-    },
-
-    /**
-     * Возвращает только текст информации без заголовка
-     */
-    getInfoOnly() {
-      return profileInfo
     },
   }
 }

@@ -3,7 +3,7 @@ import type { ConversationMenuRange } from '@grammyjs/conversations'
 
 import type { Context } from '#root/bot/context.js'
 
-import { ONBOARDING_CONVERSATION } from '../../onboarding/index.js'
+import { ONBOARDING_CONVERSATION } from '#root/bot/features/index.js'
 
 /**
  * Интерфейс для MenuRange (работает с обычным Menu и Conversation Menu)
@@ -13,7 +13,14 @@ import { ONBOARDING_CONVERSATION } from '../../onboarding/index.js'
  * Заполняет MenuRange кнопками профиля
  * Используется как в обычном меню, так и в conversations
  */
-export function buildProfileMenuRange(range: MenuRange<Context> | ConversationMenuRange<Context>) {
+type ProfileMenuOptions = {
+  natalChartsMenuId?: string
+}
+
+export function buildProfileMenuRange(
+  range: MenuRange<Context> | ConversationMenuRange<Context>,
+  options: ProfileMenuOptions = {},
+) {
   range.text(
     ctx => ctx.t('profile-menu-ascendant'),
     async (ctx) => {
@@ -21,12 +28,20 @@ export function buildProfileMenuRange(range: MenuRange<Context> | ConversationMe
     },
   ).row()
 
-  range.text(
-    ctx => ctx.t('profile-menu-natal-chart'),
-    async (ctx) => {
-      await ctx.reply(ctx.t('profile-natal-chart-message'))
-    },
-  ).row()
+  if (options.natalChartsMenuId) {
+    range.submenu(
+      ctx => ctx.t('profile-menu-natal-chart'),
+      options.natalChartsMenuId,
+    ).row()
+  }
+  else {
+    range.text(
+      ctx => ctx.t('profile-menu-natal-chart'),
+      async (ctx) => {
+        await ctx.reply(ctx.t('profile-natal-chart-message'))
+      },
+    ).row()
+  }
 
   range.text(
     ctx => ctx.t('profile-menu-compatibility'),
