@@ -11,9 +11,8 @@ dayjs.extend(timezone)
 
 export class User {
   @Expose()
-  @IsOptional()
   @IsString()
-  id?: string
+  id: string
 
   @Expose()
   @Transform(({ value }) => value ?? undefined, { toClassOnly: true })
