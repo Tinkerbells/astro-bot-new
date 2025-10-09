@@ -1,2 +1,2 @@
 export { ApiDataError, type ApiErrorInfo } from './api-data-error.js'
-export { formatApiError, getMainApiErrorRes } from './api-error-formatter.js'
+export { formatApiError } from './api-error-formatter.js'

@@ -7,169 +7,75 @@ import {
   UNAUTHORIZED_HTTP_INFO,
 } from '#root/shared/http/index.js'
 
-import type { ApiErrorInfo } from './api-data-error.js'
-
 import { ApiDataError } from './api-data-error.js'
 
 type BackendErrorResponse = {
   message?: string
   error?: string
-  statusCode?: number | string
-  errors?: Array<{
-    message?: string
-    additionalInfo?: Record<string, unknown>
-  }>
+  statusCode?: number
 }
 
-export function getMainApiErrorRes(
-  mainApiError: HttpServiceError<BackendErrorResponse, BackendErrorResponse>,
-): BackendErrorResponse | null {
-  return mainApiError.response?.data ?? null
-}
-
+/**
+ * Преобразует Axios ошибку в унифицированный ApiDataError.
+ * Работает устойчиво и безопасно:
+ * - поддерживает структурированные ошибки;
+ * - учитывает error-коды и статус-коды;
+ * - не ломается на невалидных payload'ах.
+ */
 export function formatApiError(
-  mainApiError: HttpServiceError<BackendErrorResponse, BackendErrorResponse>,
+  error: HttpServiceError<BackendErrorResponse, BackendErrorResponse>,
 ): ApiDataError {
-  const payload = getMainApiErrorRes(mainApiError)
-  const statusCode = resolveStatusCode(mainApiError, payload)
-  const errorCode = typeof payload?.error === 'string' ? payload.error : undefined
-  const baseAdditionalInfo = buildBaseAdditionalInfo(statusCode, errorCode)
+  const payload = error.response?.data
+  const status = error.response?.status ?? payload?.statusCode ?? 500
+  const code = payload?.error ?? inferCodeByStatus(status)
 
-  const payloadErrors = normalizeErrorItems(payload?.errors, baseAdditionalInfo)
-  if (payloadErrors.length > 0) {
-    return new ApiDataError({ errors: payloadErrors })
-  }
-
-  const messageFromPayload = readMessage(payload?.message)
-  if (messageFromPayload) {
+  if (payload?.message) {
     return new ApiDataError({
       errors: [
         {
-          message: messageFromPayload,
-          additionalInfo: { ...baseAdditionalInfo },
+          message: payload.message,
+          additionalInfo: { statusCode: status, code },
         },
       ],
     })
   }
 
-  const fallbackMessage = fallbackMessageByStatus(statusCode)
-    ?? mainApiError.message
-    ?? INTERNAL_ERROR_INFO.message
-
   return new ApiDataError({
     errors: [
       {
-        message: fallbackMessage,
-        additionalInfo: { ...baseAdditionalInfo },
+        message: fallbackMessageByCode(code, status),
+        additionalInfo: { statusCode: status, code },
       },
     ],
   })
 }
 
-function normalizeErrorItems(
-  items: BackendErrorResponse['errors'],
-  baseAdditionalInfo: Record<string, unknown>,
-): ApiErrorInfo[] {
-  if (!Array.isArray(items) || items.length === 0) {
-    return []
-  }
+// --- helpers --------------------------------------------------------
 
-  return items.reduce<ApiErrorInfo[]>((accumulator, item) => {
-    if (!item) {
-      return accumulator
-    }
-
-    const message = readMessage(item.message)
-    const additionalInfo = {
-      ...baseAdditionalInfo,
-      ...(isRecord(item.additionalInfo) ? item.additionalInfo : {}),
-    }
-
-    if (message) {
-      accumulator.push({
-        message,
-        additionalInfo,
-      })
-      return accumulator
-    }
-
-    accumulator.push({
-      message: INTERNAL_ERROR_INFO.message,
-      additionalInfo,
-    })
-    return accumulator
-  }, [])
-}
-
-function buildBaseAdditionalInfo(
-  statusCode: number | undefined,
-  errorCode: string | undefined,
-): Record<string, unknown> {
-  const additionalInfo: Record<string, unknown> = {}
-
-  if (typeof statusCode === 'number') {
-    additionalInfo.statusCode = statusCode
-  }
-
-  if (errorCode) {
-    additionalInfo.code = errorCode
-  }
-
-  return additionalInfo
-}
-
-function resolveStatusCode(
-  error: HttpServiceError<BackendErrorResponse, BackendErrorResponse>,
-  payload: BackendErrorResponse | null,
-): number | undefined {
-  if (typeof error.response?.status === 'number') {
-    return error.response.status
-  }
-
-  if (payload?.statusCode !== undefined) {
-    return readStatusCode(payload.statusCode)
-  }
-
-  return undefined
-}
-
-function readStatusCode(value: unknown): number | undefined {
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    return value
-  }
-
-  if (typeof value === 'string') {
-    const parsed = Number.parseInt(value, 10)
-    if (!Number.isNaN(parsed)) {
-      return parsed
-    }
-  }
-
-  return undefined
-}
-
-function fallbackMessageByStatus(statusCode: number | undefined): string | undefined {
-  switch (statusCode) {
-    case UNAUTHORIZED_HTTP_INFO.code:
-      return UNAUTHORIZED_HTTP_INFO.message
-    case BAD_REQUEST_ERROR_INFO.code:
-      return BAD_REQUEST_ERROR_INFO.message
-    case NOT_FOUND_ERROR_INFO.code:
-      return NOT_FOUND_ERROR_INFO.message
+function inferCodeByStatus(status: number): string {
+  switch (status) {
+    case 400:
+      return 'BAD_REQUEST'
+    case 401:
+      return 'UNAUTHORIZED'
+    case 403:
+      return 'FORBIDDEN'
+    case 404:
+      return 'NOT_FOUND'
+    case 500:
+      return 'INTERNAL_ERROR'
     default:
-      return undefined
+      return 'UNKNOWN'
   }
 }
 
-function readMessage(value: unknown): string | undefined {
-  if (typeof value !== 'string') {
-    return undefined
+function fallbackMessageByCode(code: string, status: number): string {
+  const map: Record<string, string> = {
+    UNAUTHORIZED: UNAUTHORIZED_HTTP_INFO.message,
+    BAD_REQUEST: BAD_REQUEST_ERROR_INFO.message,
+    NOT_FOUND: NOT_FOUND_ERROR_INFO.message,
+    INTERNAL_ERROR: INTERNAL_ERROR_INFO.message,
   }
 
-  const trimmed = value.trim()
-  return trimmed.length > 0 ? trimmed : undefined
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
+  return map[code] ?? map[inferCodeByStatus(status)] ?? INTERNAL_ERROR_INFO.message
 }

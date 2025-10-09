@@ -14,6 +14,7 @@ export {
 } from './interceptors/index.js'
 export {
   BAD_REQUEST_ERROR_INFO,
+  FORBIDDEN_ERROR_INFO,
   INTERNAL_ERROR_INFO,
   NetError,
   type NetErrorItem,

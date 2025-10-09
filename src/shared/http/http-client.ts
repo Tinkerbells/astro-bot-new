@@ -88,7 +88,7 @@ export function createHttpService(config: HttpServiceConfig = {}): HttpService {
     })
 
   const httpService = axios.create({
-    timeout: 3000,
+    timeout: 60 * 1000,
     paramsSerializer: {
       serialize: (params) => {
         return qs.stringify(params)

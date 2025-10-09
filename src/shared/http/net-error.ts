@@ -39,6 +39,11 @@ export const UNAUTHORIZED_HTTP_INFO = {
   message: 'User not authorized',
 }
 
+export const FORBIDDEN_ERROR_INFO = {
+  code: FORBIDDEN_HTTP_CODE,
+  message: 'Quota limit reached',
+}
+
 export const INTERNAL_ERROR_INFO = {
   httpCode: INTERNAL_ERROR_HTTP_CODE,
   message: 'Unknown error',

@@ -1,1 +1,1 @@
-export { apiHttpClient } from './api-client-factory.js'
+export { apiHttpClient } from './api-client.js'
