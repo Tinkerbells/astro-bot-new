@@ -9,18 +9,40 @@ import type { FormValidateResultWithReason } from '#root/bot/shared/helpers/form
 import { City } from '#root/domain/entities/city/city.js'
 import { safeAsync } from '#root/shared/safe-async/index.js'
 import { cityService } from '#root/bot/services/city-service/index.js'
+import { findCityByText, getTimezoneByCoordinates, isValidTimezone, parseCoordinates } from '#root/shared/utils/astro/index.js'
 
-import { findCityByText } from '../utils/city-utils.js'
-import { parseCoordinates } from '../utils/coordinates-utils.js'
-import { getTimezoneByCoordinates, isValidTimezone } from '../utils/timezone-utils.js'
+import type { BirthPlaceData } from '../types.js'
 
-export type BirthPlaceData = {
-  city?: string
-  timezone: string
-  latitude: number
-  longitude: number
-}
-
+/**
+ * Form step для валидации и обработки места рождения
+ *
+ * Поддерживает несколько способов ввода:
+ * 1. **Выбор из списка популярных городов** (inline кнопки)
+ * 2. **Текстовый ввод названия города** (локальный поиск + Geocoding API)
+ * 3. **Геолокация** (отправка локации через Telegram)
+ * 4. **Координаты** (формат: широта, долгота)
+ *
+ * Автоматически определяет timezone по координатам.
+ *
+ * @example
+ * ```ts
+ * // Показать inline клавиатуру с городами
+ * await ctx.reply(ctx.t('choose-city'), {
+ *   reply_markup: createCitiesInlineKeyboard()
+ * })
+ *
+ * // Показать кнопку геолокации
+ * await ctx.reply(ctx.t('or-share-location'), {
+ *   reply_markup: createLocationRequestKeyboard(ctx)
+ * })
+ *
+ * // Собрать данные с несколькими попытками (используется внутри collectBirthPlace)
+ * const result = await BirthPlaceStep.toFormBuilder(
+ *   'astro-data:timezone:city',
+ *   ctx.t('astro-data-location-invalid')
+ * ).validate(ctx)
+ * ```
+ */
 export class BirthPlaceStep {
   @Expose()
   @IsOptional()
@@ -115,12 +137,15 @@ export class BirthPlaceStep {
   /**
    * Создает FormBuilder для использования с conversation.form.build()
    */
-  static toFormBuilder() {
+  static toFormBuilder(
+    callbackDataPrefix: string,
+    invalidMessage: string,
+  ) {
     return {
       collationKey: 'form-birth-place',
       validate: async (ctx: Context): Promise<FormValidateResultWithReason<BirthPlaceData, string>> => {
         // Обработка callback_query от Inline кнопок с городами
-        if (ctx.callbackQuery?.data?.startsWith('onboarding:timezone:city:')) {
+        if (ctx.callbackQuery?.data?.startsWith(`${callbackDataPrefix}:`)) {
           await ctx.answerCallbackQuery()
 
           const index = Number.parseInt(ctx.callbackQuery.data.split(':')[3], 10)
@@ -167,10 +192,11 @@ export class BirthPlaceStep {
       },
       otherwise: async (ctx: Context, error: string) => {
         if (error === 'city_not_found') {
-          await ctx.reply(ctx.t('onboarding-location-not-found-try-coordinates'))
+          // Обрабатывается на уровне conversation (цикл попыток)
+
         }
         else {
-          await ctx.reply(ctx.t('onboarding-location-invalid'))
+          await ctx.reply(invalidMessage)
         }
       },
     }
@@ -179,7 +205,7 @@ export class BirthPlaceStep {
   /**
    * Создает FormBuilder для обработки координат (второй шаг после неудачного поиска города)
    */
-  static toCoordinatesFormBuilder() {
+  static toCoordinatesFormBuilder(errorMessage: string) {
     return {
       collationKey: 'form-birth-place-coordinates',
       validate: async (ctx: Context): Promise<FormValidateResultWithReason<BirthPlaceData, string>> => {
@@ -194,7 +220,7 @@ export class BirthPlaceStep {
         return { ok: true, value: result }
       },
       otherwise: async (ctx: Context, _error: string) => {
-        await ctx.reply(ctx.t('onboarding-coordinates-invalid'))
+        await ctx.reply(errorMessage)
       },
     }
   }

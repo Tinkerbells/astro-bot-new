@@ -6,8 +6,27 @@ import { IsNotEmpty, IsString, Matches, validateOrReject } from 'class-validator
 import type { Context } from '#root/bot/context.js'
 import type { FormValidateResult } from '#root/bot/shared/helpers/form.js'
 
-import { parseBirthDateInput } from '../utils/date-utils.js'
+import { parseBirthDateInput } from '#root/shared/utils/astro/index.js'
 
+/**
+ * Form step для валидации и обработки даты рождения
+ *
+ * Принимает даты в форматах:
+ * - DD.MM.YYYY (15.06.1990)
+ * - DD-MM-YYYY (15-06-1990)
+ * - DD/MM/YYYY (15/06/1990)
+ * - YYYY-MM-DD (1990-06-15)
+ *
+ * Возвращает дату в формате ISO: YYYY-MM-DD
+ *
+ * @example
+ * ```ts
+ * const birthDate = await conversation.form.build(
+ *   BirthDateStep.toFormBuilder(ctx.t('error-invalid-date'))
+ * )
+ * // birthDate: '1990-06-15'
+ * ```
+ */
 export class BirthDateStep {
   @Expose()
   @IsNotEmpty()
@@ -20,8 +39,18 @@ export class BirthDateStep {
 
   /**
    * Создает FormBuilder для использования с conversation.form.build()
+   *
+   * @param errorMessage - Сообщение об ошибке при невалидной дате
+   * @returns FormBuilder для валидации даты рождения
+   *
+   * @example
+   * ```ts
+   * const birthDate = await conversation.form.build(
+   *   BirthDateStep.toFormBuilder(ctx.t('astro-data-birth-date-invalid'))
+   * )
+   * ```
    */
-  static toFormBuilder(): FormBuilder<Context, string> {
+  static toFormBuilder(errorMessage: string): FormBuilder<Context, string> {
     return {
       collationKey: 'form-birth-date',
       validate: async (ctx: Context): Promise<FormValidateResult<string>> => {
@@ -40,7 +69,7 @@ export class BirthDateStep {
         }
       },
       otherwise: async (ctx: Context) => {
-        await ctx.reply(ctx.t('onboarding-birth-date-invalid'))
+        await ctx.reply(errorMessage)
       },
     }
   }

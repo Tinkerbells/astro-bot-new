@@ -22,6 +22,22 @@ admin-commands-updated = Commands updated.
 
 unhandled = Unrecognized command. Try /start
 
+## Astro Data Collection (Shared)
+
+astro-data-birth-date = 📅 Please enter the birth date in DD.MM.YYYY or DD-MM-YYYY format (e.g. 15.06.1990).
+astro-data-birth-date-invalid = ⚠️ That date looks off. Try DD.MM.YYYY or DD-MM-YYYY (e.g. 15.06.1990).
+astro-data-birth-time = ⏰ Now enter the birth time in HH:MM or HH-MM (e.g. 14:30).
+astro-data-birth-time-invalid = ⚠️ I couldn't read the time. Use HH:MM or HH-MM (e.g. 14:30).
+astro-data-location = 🗺️ Where was the person born? Choose a city below, share location, or type the name manually.
+astro-data-location-invalid = ⚠️ Please share location or enter a city name.
+astro-data-location-not-found = 🤔 I couldn't find that city. Try again or pick from the list.
+astro-data-location-not-found-final = 😔 City not found. Let's try using coordinates instead.
+astro-data-location-not-found-try-coordinates = 🤔 City not found. Please enter coordinates in format: latitude, longitude (e.g. 55.7558, 37.6173)
+astro-data-coordinates-invalid = ⚠️ Invalid coordinate format. Use format: latitude, longitude (e.g. 55.7558, 37.6173)
+astro-data-location-share = 📡 You can also share location — I'll detect the timezone automatically.
+astro-data-skip = Skip
+astro-data-location-request = 📡 Share location
+
 ## Onboarding Feature
 
 onboarding-start = 🌟 Welcome! Let's set up your astro profile so I can craft personalized insights.
@@ -35,7 +51,7 @@ onboarding-location-not-found = 🤔 I couldn't find that city. Try again or pic
 onboarding-location-not-found-final = 😔 City not found. Let's try using coordinates instead.
 onboarding-location-not-found-try-coordinates = 🤔 City not found. Please enter coordinates in format: latitude, longitude (e.g. 55.7558, 37.6173)
 onboarding-coordinates-invalid = ⚠️ Invalid coordinate format. Use format: latitude, longitude (e.g. 55.7558, 37.6173)
-onboarding-location-share = 📡 You can also share your location — I’ll detect the timezone automatically.
+onboarding-location-share = 📡 You can also share your location — I'll detect the timezone automatically.
 onboarding-validation-error = ⚠️ I couldn't process that. Let's try again.
 onboarding-complete = ✅ Great! Your profile is set up.
 onboarding-skip = Skip

@@ -1,5 +1,7 @@
 import type { Context } from '#root/bot/context.js'
 import type { Logger } from '#root/shared/logger.js'
+import type { User } from '#root/domain/entities/index.js'
+import type { NatalChartsRepositoryDTO } from '#root/data/index.js'
 import type { NatalChartsRepository } from '#root/data/repositories/natal-charts-repository/natal-charts-repository.js'
 
 import { logger } from '#root/shared/logger.js'
@@ -15,13 +17,7 @@ export class NatalChartsService {
     private readonly logger: Logger,
   ) { }
 
-  private async sendProfileMenu(ctx: Context) {
-    const message = createProfileMessage(ctx)
-    await message.send()
-  }
-
-  public canGenerateUserChart(ctx: Context): boolean {
-    const user = ctx.session.user
+  public canGenerateUserChart(user: User): boolean {
     if (!user) {
       return false
     }
@@ -45,17 +41,16 @@ export class NatalChartsService {
     const [userNatalChartError, userNatalChart] = await safeAsync(this.natalChartsRepository.getLatestForUser({ userId: Number(user.id) }))
 
     if (userNatalChartError && !this.isNotFoundApiError(userNatalChartError)) {
-      await ctx.reply(ctx.t('errors-something-went-wrong'))
+      await fetchingMessage.editText(ctx.t('errors-something-went-wrong'))
       return
     }
 
     if (userNatalChart) {
       await ctx.safeReplyMarkdown(userNatalChart.interpretation)
-      this.sendProfileMenu(ctx)
       return
     }
 
-    if (!this.canGenerateUserChart(ctx)) {
+    if (!this.canGenerateUserChart(user)) {
       await fetchingMessage.editText(ctx.t('natal-charts-user-missing-data'))
       return
     }
@@ -63,66 +58,51 @@ export class NatalChartsService {
     const [generateForUserError, generatedUserNatalChart] = await safeAsync(this.natalChartsRepository.generateForUser({ userId: Number(user.id) }))
 
     if (generateForUserError && !this.isQuotaLimitError(generateForUserError)) {
-      await ctx.reply(ctx.t('errors-something-went-wrong'))
+      await fetchingMessage.editText(ctx.t('errors-something-went-wrong'))
       return
     }
 
     if (this.isQuotaLimitError(generateForUserError)) {
       // TODO: возможно лучше выводить ошибку с бэка, с форматированным временем окончания лимита
-      await ctx.reply(ctx.t('error-quota-limit'))
+      await fetchingMessage.editText(ctx.t('error-quota-limit'))
+      return
     }
 
     if (!generatedUserNatalChart) {
-      await ctx.reply(ctx.t('errors-something-went-wrong'))
+      await fetchingMessage.editText(ctx.t('errors-something-went-wrong'))
       return
     }
 
     await ctx.safeReplyMarkdown(generatedUserNatalChart.interpretation)
 
-    this.sendProfileMenu(ctx)
+    await createProfileMessage(ctx).send()
   }
 
   // TODO: полностью неправильно, нужно отдельно брать информацию про guest пользователя, а не исползовать ctx.session.user
-  public async replyWithGuestNatalChart(ctx: Context): Promise<void> {
-    const user = ctx.session.user
+  public async replyWithGuestNatalChart(ctx: Context, dto: NatalChartsRepositoryDTO.GenerateGuestDTO): Promise<void> {
+    const fetchingMessage = await ctx.reply(ctx.t('fetching'))
 
-    if (!user?.birthDate || user.latitude === undefined || user.longitude === undefined) {
-      await ctx.reply(ctx.t('natal-charts-guest-missing-data'))
+    const [guestNatalChartError, guestNatalChart] = await safeAsync(this.natalChartsRepository.generateGuest(dto))
+
+    if (guestNatalChartError && !this.isQuotaLimitError(guestNatalChartError)) {
+      await fetchingMessage.editText(ctx.t('errors-something-went-wrong'))
       return
     }
 
-    await ctx.reply(ctx.t('natal-charts-guest-generating'))
-
-    // try {
-    //   const guestChart = await this.generateGuestNatalChart({
-    //     userId: Number(user.id),
-    //     birthDateTime: this.buildBirthDateTime(user.birthDate, user.birthTime),
-    //     latitude: user.latitude,
-    //     longitude: user.longitude,
-    //   })
-    //
-    //   await ctx.reply(ctx.t('natal-charts-guest-success'))
-    //   await ctx.safeReplyMarkdown(guestChart.interpretation)
-    // }
-    // catch (error) {
-    //   this.logger.error({ err: error }, 'Failed to generate guest natal chart')
-    //
-    //   if (this.isQuotaLimitError(error)) {
-    //     const message = this.getQuotaLimitMessage(error) ?? ctx.t('error-quota-limit')
-    //     await ctx.reply(message)
-    //     return
-    //   }
-    //
-    //   await ctx.reply(ctx.t('natal-charts-error'))
-    // }
-  }
-
-  public buildBirthDateTime(birthDate: string, birthTime?: string): string {
-    if (birthTime) {
-      return `${birthDate}T${birthTime}:00`
+    if (this.isQuotaLimitError(guestNatalChartError)) {
+      // TODO: возможно лучше выводить ошибку с бэка, с форматированным временем окончания лимита
+      await fetchingMessage.editText(ctx.t('error-quota-limit'))
+      return
     }
 
-    return `${birthDate}T12:00:00`
+    if (!guestNatalChart) {
+      await fetchingMessage.editText(ctx.t('errors-something-went-wrong'))
+      return
+    }
+
+    await ctx.safeReplyMarkdown(guestNatalChart.interpretation)
+
+    await createProfileMessage(ctx).send()
   }
 
   private isNotFoundApiError(error: unknown): boolean {

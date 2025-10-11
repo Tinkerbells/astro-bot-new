@@ -23,9 +23,9 @@ import { profileFeature } from '#root/bot/features/profile/index.js'
 // import { languageFeature } from '#root/bot/features/language/index.js'
 import { unhandledFeature } from '#root/bot/features/unhandled/index.js'
 import { updateLogger } from '#root/bot/shared/middlewares/update-logger.js'
-import { natalChartsFeature } from '#root/bot/features/natal-charts/index.js'
 import { createUserSessionMiddleware } from '#root/bot/shared/middlewares/user.js'
-import { onboarding, ONBOARDING_CONVERSATION, onboardingFeature } from '#root/bot/features/onboarding/index.js'
+import { ONBOARDING_CONVERSATION, onboardingConversation, onboardingFeature } from '#root/bot/features/onboarding/index.js'
+import { NATAL_CHARTS_GUEST_CONVERSATION, natalChartsFeature, natalChartsGuestConversation } from '#root/bot/features/natal-charts/index.js'
 
 import type { UserService } from './services/user-service/index.js'
 import type { NatalChartsService } from './services/natal-charts-service/index.js'
@@ -148,7 +148,8 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
   }))
 
   // Сначала регистрируем все conversations
-  protectedBot.use(createConversation(onboarding, ONBOARDING_CONVERSATION))
+  protectedBot.use(createConversation(onboardingConversation, ONBOARDING_CONVERSATION))
+  protectedBot.use(createConversation(natalChartsGuestConversation, NATAL_CHARTS_GUEST_CONVERSATION))
 
   // Потом регистрируем меню (которые используют conversations)
   protectedBot.use(profileMenu)
