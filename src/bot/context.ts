@@ -13,7 +13,7 @@ import type { UserService } from '#root/bot/services/user-service/index.js'
 import type { NatalChartsService } from '#root/bot/services/natal-charts-service/index.js'
 
 import type { SafeReply } from './shared/helpers/safe-reply.js'
-import type { FormState } from './shared/forms/plugins/attempts.js'
+import type { AttemptsState } from './shared/forms/plugins/attempts.js'
 import type { OnboardingState } from './shared/types/onboarding.types.js'
 import type { SafeReplyMarkdown } from './shared/helpers/safe-reply-markdown.js'
 
@@ -21,7 +21,7 @@ export type SessionData = {
   user: User
   onboarding: OnboardingState
   __language_code?: string
-  __formState?: FormState
+  __formAttempts?: AttemptsState
 }
 
 type ExtendedContextFlavor = {

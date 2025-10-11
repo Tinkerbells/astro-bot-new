@@ -2,11 +2,11 @@ import type { Conversation } from '@grammyjs/conversations'
 
 import type { Context } from '#root/bot/context.js'
 
-import type { FormStepPlugin } from './types.js'
+import type { FormBuildOptions, FormStepPlugin } from './types.js'
 
 // Вспомогательные типы
 type PluginMap<TContext extends Context> = {
-  [K in string]: FormStepPlugin<TContext, string>
+  [K in string]: FormStepPlugin<TContext, string, undefined>
 }
 
 type PluginClass<TContext extends Context> = {
@@ -17,17 +17,25 @@ type PluginClass<TContext extends Context> = {
   ) => Promise<FormStepPlugin<TContext, string>> | FormStepPlugin<TContext, string>
 }
 
+type PluginManagerOptions = {
+  onCleanup?: () => Promise<void> | void
+}
+
 export class PluginManager<
   TContext extends Context = Context,
   TPlugins extends PluginMap<TContext> = Record<string, never>,
 > {
-  private plugins = new Map<string, FormStepPlugin<TContext, string>>()
+  private plugins = new Map<keyof TPlugins & string, TPlugins[keyof TPlugins]>()
+  private readonly onCleanup?: () => Promise<void> | void
 
   constructor(
     private readonly ctx: TContext,
     private readonly conversation: Conversation<TContext, TContext>,
     private readonly stepId: string,
-  ) { }
+    options?: PluginManagerOptions,
+  ) {
+    this.onCleanup = options?.onCleanup
+  }
 
   /**
    * Регистрирует массив плагинов через статический метод init
@@ -37,11 +45,12 @@ export class PluginManager<
       // Создаём и инициализируем плагин через статический метод init
       const plugin = await Plugin.init(this.ctx, this.conversation, this.stepId)
 
-      if (this.plugins.has(plugin.name)) {
+      const pluginName = plugin.name as keyof TPlugins & string
+      if (this.plugins.has(pluginName)) {
         throw new Error(`Plugin "${plugin.name}" is already registered`)
       }
 
-      this.plugins.set(plugin.name, plugin)
+      this.plugins.set(pluginName, plugin as TPlugins[keyof TPlugins])
     }
   }
 
@@ -49,7 +58,7 @@ export class PluginManager<
    * Получает плагин по имени с автокомплитом и проверкой типов
    */
   public get<K extends keyof TPlugins>(name: K): TPlugins[K] {
-    const plugin = this.plugins.get(name as string)
+    const plugin = this.plugins.get(name as keyof TPlugins & string)
     if (!plugin) {
       throw new Error(`Plugin "${String(name)}" not found`)
     }
@@ -67,10 +76,48 @@ export class PluginManager<
   /**
    * Очищает все плагины
    */
-  public cleanup(): void {
+  public async cleanup(): Promise<void> {
     for (const plugin of this.plugins.values()) {
-      plugin.cleanup?.()
+      if (typeof plugin.cleanup === 'function') {
+        await plugin.cleanup()
+      }
     }
+
     this.plugins.clear()
+
+    if (this.onCleanup) {
+      await this.onCleanup()
+    }
+  }
+
+  /**
+   * Выполняет conversation.form.build с учётом плагинов
+   */
+  public async build<TValue>(
+    options: FormBuildOptions<TContext, TValue>,
+  ): Promise<TValue> {
+    const originalBuild = this.conversation.form.build.bind(this.conversation.form) as (
+      buildOptions: FormBuildOptions<TContext, TValue>,
+    ) => Promise<TValue>
+
+    const plugins = Array.from(this.plugins.entries()) as Array<[
+      keyof TPlugins & string,
+      TPlugins[keyof TPlugins],
+    ]>
+
+    const pipeline = plugins.reduceRight(
+      (next, [, plugin]) => {
+        if (typeof plugin.wrapFormBuild !== 'function') {
+          return next
+        }
+
+        return async (buildOptions: FormBuildOptions<TContext, TValue>) => {
+          return plugin.wrapFormBuild!(buildOptions, next)
+        }
+      },
+      originalBuild,
+    )
+
+    return pipeline(options)
   }
 }

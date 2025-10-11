@@ -2,9 +2,20 @@ import type { Conversation } from '@grammyjs/conversations'
 
 import type { Context } from '#root/bot/context.js'
 
+export type FormValidateResult<T> = { ok: false, error?: unknown } | { ok: true, value: T }
+
+export type FormBuildOptions<
+  TContext extends Context,
+  TValue,
+> = {
+  validate: (ctx: TContext) => Promise<FormValidateResult<TValue>>
+  otherwise?: (ctx: TContext) => Promise<void>
+}
+
 export abstract class FormStepPlugin<
   _TContext extends Context = Context,
   TName extends string = string,
+  TConfig = undefined,
 > {
   /**
    * Название плагина (уникальное)
@@ -25,5 +36,16 @@ export abstract class FormStepPlugin<
   /**
    * Очистка ресурсов плагина (опциональный метод)
    */
-  public cleanup?(): void
+  public cleanup?(): void | Promise<void>
+
+  /**
+   * Позволяет плагину обернуть вызов формы (conversation.form.build)
+   */
+  public wrapFormBuild?<
+    TValue,
+  >(
+    options: FormBuildOptions<_TContext, TValue>,
+    next: (options: FormBuildOptions<_TContext, TValue>) => Promise<TValue>,
+    config?: TConfig extends undefined ? undefined : TConfig,
+  ): Promise<TValue>
 }

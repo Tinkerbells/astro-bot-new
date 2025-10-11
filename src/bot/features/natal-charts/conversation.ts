@@ -3,8 +3,8 @@ import type { Conversation } from '@grammyjs/conversations'
 import type { Context } from '#root/bot/context.js'
 import type { AstroDataResult } from '#root/bot/shared/forms/astro-data/index.js'
 
-import { exampleFormStep } from '#root/bot/shared/forms/form-step.js'
 import { collectAstroData } from '#root/bot/shared/forms/astro-data/index.js'
+import { exampleFormStep, exampleFormStep2 } from '#root/bot/shared/forms/form-step.js'
 import { setConversationLocale } from '#root/bot/shared/helpers/conversation-locale.js'
 import { buildProfileMenuRange, createProfileMessage, PROFILE_MENU_ID } from '#root/bot/shared/menus/index.js'
 
@@ -48,15 +48,13 @@ export async function natalChartsGuestConversation(
 ) {
   await setConversationLocale(conversation, ctx)
 
-  const form = exampleFormStep({ ctx, conversation })
-
-  const name1 = await form.build()
+  const name1 = await exampleFormStep({ ctx, conversation }).build()
 
   if (name1) {
     await ctx.reply(name1)
   }
 
-  const name2 = await form.build()
+  const name2 = await exampleFormStep2({ ctx, conversation }).build()
 
   if (name2) {
     await ctx.reply(name2)

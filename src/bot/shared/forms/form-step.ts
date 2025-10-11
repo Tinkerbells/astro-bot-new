@@ -1,14 +1,13 @@
 import type { Conversation } from '@grammyjs/conversations'
 
 import * as v from 'valibot'
+import { randomUUID } from 'node:crypto'
 
 import type { Context } from '#root/bot/context.js'
 
-import type { FormStepPlugin } from './plugins/index.js'
+import type { FormBuildOptions, FormStepPlugin } from './plugins/index.js'
 
 import { AttemptsPlugin, PluginManager, SkipPlugin } from './plugins/index.js'
-
-export type FormValidateResult<T> = { ok: false, error?: unknown } | { ok: true, value: T }
 
 // Тип для класса плагина со статическим методом init
 type PluginClass<TContext extends Context> = {
@@ -16,15 +15,12 @@ type PluginClass<TContext extends Context> = {
     ctx: TContext,
     conversation: Conversation<TContext, TContext>,
     stepId: string,
-  ) => Promise<FormStepPlugin<TContext, string>> | FormStepPlugin<TContext, string>
+  ) => Promise<FormStepPlugin<TContext, string, undefined>> | FormStepPlugin<TContext, string, undefined>
 }
 
 // Извлекаем instance type из класса плагина
 type InferPluginFromClass<TClass> = TClass extends { init: (...args: any[]) => infer TReturn }
-  ? TReturn extends Promise<infer TPlugin>
-    ? TPlugin
-    : TReturn
-  : never
+  ? TReturn extends Promise<infer TPlugin> ? TPlugin : TReturn : never
 
 // Получаем карту плагинов из массива классов
 type InferPlugins<TConstructors extends readonly unknown[]> = {
@@ -43,6 +39,9 @@ type FormStepHelpers<
   plugins: PluginManager<TContext, InferPlugins<TConstructors>>
   validate: (input: TInput) => Promise<void>
   prompt: () => Promise<any>
+  form: {
+    build: <TValue>(options: FormBuildOptions<TContext, TValue>) => Promise<TValue>
+  }
 }
 
 // Конфигурация для formStep
@@ -68,9 +67,7 @@ export type FormStepFactory<TContext extends Context, TInput, TOutput> = (option
   prompt: () => Promise<any>
 }
 
-// Счетчик для генерации уникальных stepId
-let stepIdCounter = 0
-
+const createUniqueId = () => randomUUID()
 /**
  * Функция-билдер для создания formStep в функциональном стиле
  * Использует currying для автоматического вывода типов плагинов
@@ -83,44 +80,84 @@ export function formStep<TContext extends Context = Context>() {
   >(
     config: FormStepConfig<TContext, TInput, TOutput, TConstructors>,
   ): FormStepFactory<TContext, TInput, TOutput> => {
-    // Генерируем уникальный stepId один раз при создании formStep
-    const uniqueStepId = config.stepId ?? `formStep_${++stepIdCounter}_${Date.now()}`
+    // Базовый stepId при создании formStep (если не передан явно)
+    const stepId = config.stepId ?? `formStep_${createUniqueId()}`
 
     return ({ ctx, conversation }) => {
-      // Создаем PluginManager с уникальным stepId
-      const pluginManager = new PluginManager<TContext, InferPlugins<TConstructors>>(
-        ctx,
-        conversation,
-        uniqueStepId,
-      )
+      let pluginManager: PluginManager<TContext, InferPlugins<TConstructors>> | null = null
+      let initPromise: Promise<void> | null = null
 
-      // Регистрируем плагины асинхронно
-      const init = async () => {
-        if (config.plugins) {
-          const pluginClasses = config.plugins as readonly PluginClass<TContext>[]
-          await pluginManager.use(pluginClasses)
+      const resetState = () => {
+        pluginManager = null
+        initPromise = null
+      }
+
+      const ensurePlugins = async () => {
+        if (!initPromise) {
+          initPromise = (async () => {
+            pluginManager = new PluginManager<TContext, InferPlugins<TConstructors>>(
+              ctx,
+              conversation,
+              stepId,
+              {
+                onCleanup: async () => {
+                  resetState()
+                },
+              },
+            )
+
+            if (config.plugins) {
+              const pluginClasses = config.plugins as readonly PluginClass<TContext>[]
+              await pluginManager.use(pluginClasses)
+            }
+          })()
+        }
+
+        try {
+          await initPromise
+        }
+        catch (error) {
+          resetState()
+          throw error
         }
       }
 
-      // Создаем helpers
-      const helpers: FormStepHelpers<TContext, TInput, TConstructors> = {
-        ctx,
-        conversation,
-        plugins: pluginManager,
-        validate: config.validate,
-        prompt: async () => config.prompt({ ctx, conversation, plugins: pluginManager }),
+      const formHelper = {
+        build: async <TValue>(options: FormBuildOptions<TContext, TValue>) => {
+          await ensurePlugins()
+          return pluginManager!.build(options)
+        },
+      }
+
+      const promptWithInit = async () => {
+        await ensurePlugins()
+        return config.prompt({ ctx, conversation, plugins: pluginManager!, form: formHelper })
+      }
+
+      const getHelpers = async (): Promise<FormStepHelpers<TContext, TInput, TConstructors>> => {
+        await ensurePlugins()
+        return {
+          ctx,
+          conversation,
+          plugins: pluginManager!,
+          validate: config.validate,
+          prompt: promptWithInit,
+          form: formHelper,
+        }
       }
 
       return {
         build: async () => {
-          await init()
-          return config.build(helpers)
+          const helpers = await getHelpers()
+          try {
+            return await config.build(helpers)
+          }
+          finally {
+            await helpers.plugins.cleanup()
+          }
         },
         validate: config.validate,
-        prompt: async () => {
-          await init()
-          return config.prompt({ ctx, conversation, plugins: pluginManager })
-        },
+        prompt: promptWithInit,
       }
     }
   }
@@ -137,7 +174,7 @@ const nameSchema = v.pipe(
 )
 
 export const exampleFormStep = formStep<Context>()({
-  plugins: [AttemptsPlugin, SkipPlugin],
+  plugins: [SkipPlugin, AttemptsPlugin],
 
   async validate(input) {
     if (input === null)
@@ -149,45 +186,102 @@ export const exampleFormStep = formStep<Context>()({
   },
 
   async prompt({ ctx, plugins }) {
+    const skip = plugins.get('skip')
     await ctx.reply('Type you name or skip', {
-      reply_markup: plugins.get('skip').createKeyboard(),
+      reply_markup: skip.createKeyboard(),
     })
   },
 
-  async build({ conversation, plugins, validate, prompt }) {
+  async build({ plugins, validate, prompt, form }) {
     await prompt()
-    const name = await conversation.form.build({
+    const skip = plugins.get('skip')
+    skip.setSkipResult(() => ({ ok: true, value: null }))
+
+    const attempts = plugins.get('attempts')
+    attempts.setMaxAttempts(3)
+    attempts.setOnLimitReached(async (ctx: Context) => {
+      await ctx.reply('You are out of limit')
+      return { ok: true, value: null }
+    })
+
+    const name = await form.build({
       validate: async (ctx) => {
-        const currentAttempts = await plugins.get('attempts').increment()
+        const text = ctx.message?.text
+        if (!text)
+          return { ok: false, error: 'No text message' }
 
-        if (currentAttempts <= 3) {
-          await plugins.get('skip').skip(ctx, () => {
-            return { ok: true, value: null }
-          })
-
-          const text = ctx.message?.text
-          if (!text)
-            return { ok: false, error: 'No text message' }
-
-          try {
-            await validate(text)
-            plugins.cleanup()
-            return { ok: true, value: text }
-          }
-          catch (err) {
-            return { ok: false, error: err }
-          }
+        try {
+          await validate(text)
+          return { ok: true, value: text }
         }
-        else {
-          await ctx.reply('You are out of limit')
-          plugins.cleanup()
-          return { ok: true, value: null }
+        catch (err) {
+          return { ok: false, error: err }
         }
       },
       otherwise: async (ctx: Context) => {
         await ctx.reply('You are typing wrong name')
       },
     })
+
+    await plugins.cleanup()
+
+    return name
+  },
+})
+
+export const exampleFormStep2 = formStep<Context>()({
+  stepId: 'exampleFormStep2', // Явно указываем другой stepId
+  plugins: [SkipPlugin, AttemptsPlugin],
+
+  async validate(input) {
+    if (input === null)
+      throw new Error('Имя не указано')
+
+    const result = v.safeParse(nameSchema, input)
+    if (!result.success)
+      throw new Error(result.issues.map(i => i.message).join(', '))
+  },
+
+  async prompt({ ctx, plugins }) {
+    const skip = plugins.get('skip')
+    skip.setButton('Skip step 2')
+    await ctx.reply('Type you name or skip (step 2)', {
+      reply_markup: skip.createKeyboard(),
+    })
+  },
+
+  async build({ plugins, validate, prompt, form }) {
+    await prompt()
+    const skip = plugins.get('skip')
+    skip.setSkipResult(() => ({ ok: true, value: null }))
+
+    const attempts = plugins.get('attempts')
+    attempts.setMaxAttempts(3)
+    attempts.setOnLimitReached(async (ctx: Context) => {
+      await ctx.reply('You are out of limit')
+      return { ok: true, value: null }
+    })
+
+    const name = await form.build({
+      validate: async (ctx) => {
+        const text = ctx.message?.text
+        if (!text)
+          return { ok: false, error: 'No text message' }
+
+        try {
+          await validate(text)
+          return { ok: true, value: text }
+        }
+        catch (err) {
+          return { ok: false, error: err }
+        }
+      },
+      otherwise: async (ctx: Context) => {
+        await ctx.reply('You are typing wrong name')
+      },
+    })
+
+    await plugins.cleanup()
 
     return name
   },
