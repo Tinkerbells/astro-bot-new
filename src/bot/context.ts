@@ -10,11 +10,13 @@ import type { Config } from '#root/shared/config.js'
 import type { Logger } from '#root/shared/logger.js'
 import type { User } from '#root/domain/entities/user/user.js'
 import type { UserService } from '#root/bot/services/user-service/index.js'
+import type { AscendantsService } from '#root/bot/services/ascendants-service/index.js'
 import type { NatalChartsService } from '#root/bot/services/natal-charts-service/index.js'
 
 import type { SafeReply } from './shared/helpers/safe-reply.js'
 import type { AttemptsState } from './shared/forms/plugins/attempts.js'
 import type { OnboardingState } from './shared/types/onboarding.types.js'
+import type { CityService } from './services/city-service/city-service.js'
 import type { SafeReplyMarkdown } from './shared/helpers/safe-reply-markdown.js'
 
 export type SessionData = {
@@ -29,6 +31,8 @@ type ExtendedContextFlavor = {
   config: Config
   userService: UserService
   natalChartsService: NatalChartsService
+  ascendantsService: AscendantsService
+  cityService: CityService
   safeReply: SafeReply
   safeReplyMarkdown: SafeReplyMarkdown
 }

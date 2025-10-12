@@ -25,9 +25,12 @@ import { unhandledFeature } from '#root/bot/features/unhandled/index.js'
 import { updateLogger } from '#root/bot/shared/middlewares/update-logger.js'
 import { createUserSessionMiddleware } from '#root/bot/shared/middlewares/user.js'
 import { ONBOARDING_CONVERSATION, onboardingConversation, onboardingFeature } from '#root/bot/features/onboarding/index.js'
+import { ASCENDANTS_GUEST_CONVERSATION, ascendantsFeature, ascendantsGuestConversation } from '#root/bot/features/ascendants/index.js'
 import { NATAL_CHARTS_GUEST_CONVERSATION, natalChartsFeature, natalChartsGuestConversation } from '#root/bot/features/natal-charts/index.js'
 
 import type { UserService } from './services/user-service/index.js'
+import type { CityService } from './services/city-service/city-service.js'
+import type { AscendantsService } from './services/ascendants-service/index.js'
 import type { NatalChartsService } from './services/natal-charts-service/index.js'
 
 import { profileMenu } from './shared/menus/index.js'
@@ -39,7 +42,9 @@ type Dependencies = {
   config: Config
   logger: Logger
   userService: UserService
+  cityService: CityService
   natalChartsService: NatalChartsService
+  ascendantsService: AscendantsService
 }
 
 function getUserSessionKey(ctx: Omit<Context, 'session'>) {
@@ -57,7 +62,9 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
     config,
     logger,
     userService,
+    cityService,
     natalChartsService,
+    ascendantsService,
   } = dependencies
 
   const bot = new TelegramBot<Context>(token, botConfig)
@@ -66,6 +73,8 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
     ctx.config = config
     ctx.userService = userService
     ctx.natalChartsService = natalChartsService
+    ctx.ascendantsService = ascendantsService
+    ctx.cityService = cityService
     ctx.logger = logger.child({
       update_id: ctx.update.update_id,
     })
@@ -130,12 +139,14 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
       getStorageKey: getUserConversationKey,
     },
     plugins: [
-      // Добавляем config, logger, userService и natalChartsService в контекст диалога
+      // Добавляем config, logger, userService, natalChartsService и ascendantsService в контекст диалога
       hydrate(),
       async (ctx, next) => {
         ctx.config = config
         ctx.userService = userService
         ctx.natalChartsService = natalChartsService
+        ctx.ascendantsService = ascendantsService
+        ctx.cityService = cityService
         ctx.logger = logger.child({
           update_id: ctx.update.update_id,
         })
@@ -150,12 +161,15 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
   // Сначала регистрируем все conversations
   protectedBot.use(createConversation(onboardingConversation, ONBOARDING_CONVERSATION))
   protectedBot.use(createConversation(natalChartsGuestConversation, NATAL_CHARTS_GUEST_CONVERSATION))
+  protectedBot.use(createConversation(ascendantsGuestConversation, ASCENDANTS_GUEST_CONVERSATION))
 
   // Потом регистрируем меню (которые используют conversations)
   protectedBot.use(profileMenu)
 
   protectedBot.use(profileFeature)
+
   protectedBot.use(natalChartsFeature)
+  protectedBot.use(ascendantsFeature)
 
   // Handlers
   protectedBot.use(onboardingFeature)

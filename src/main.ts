@@ -14,19 +14,24 @@ import { config } from '#root/shared/config.js'
 import { logger } from '#root/shared/logger.js'
 import { createServer, createServerManager } from '#root/server/index.js'
 
+import { cityService } from './bot/services/city-service/index.js'
 import { createUserService } from './bot/services/user-service/index.js'
+import { createAscendantsService } from './bot/services/ascendants-service/index.js'
 import { createNatalChartsService } from './bot/services/natal-charts-service/index.js'
 
 // Create shared dependencies
 const userService = createUserService()
 const natalChartsService = createNatalChartsService()
+const ascendantsService = createAscendantsService()
 
 async function startPolling(config: PollingConfig) {
   const bot = createBot(config.botToken, {
     config,
     logger,
     userService,
+    cityService,
     natalChartsService,
+    ascendantsService,
   })
   let runner: undefined | RunnerHandle
 
@@ -61,7 +66,9 @@ async function startWebhook(config: WebhookConfig) {
     config,
     logger,
     userService,
+    cityService,
     natalChartsService,
+    ascendantsService,
   })
   const server = createServer({
     bot,
