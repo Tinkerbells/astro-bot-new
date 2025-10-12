@@ -100,9 +100,7 @@ export class NatalChartsService {
       return
     }
 
-    await ctx.safeReplyMarkdown(guestNatalChart.interpretation)
-
-    await createProfileMessage(ctx).send()
+    await ctx.safeReplyMarkdown(guestNatalChart.interpretation, { reply_markup: { remove_keyboard: true } })
   }
 
   private isNotFoundApiError(error: unknown): boolean {
