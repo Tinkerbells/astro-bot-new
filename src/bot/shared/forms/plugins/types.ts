@@ -48,4 +48,13 @@ export abstract class FormStepPlugin<
     next: (options: FormBuildOptions<_TContext, TValue>) => Promise<TValue>,
     config?: TConfig extends undefined ? undefined : TConfig,
   ): Promise<TValue>
+
+  /**
+   * Дополнительный этап инициализации для заранее созданных инстансов плагинов.
+   */
+  public setup?(
+    ctx: _TContext,
+    conversation: Conversation<_TContext, _TContext>,
+    stepId: string,
+  ): Promise<void> | void
 }

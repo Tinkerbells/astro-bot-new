@@ -22,15 +22,20 @@ type LimitHandler<TContext extends Context> = (
  * задать собственную реакцию, когда лимит достигнут. Состояние хранится в сессии
  * conversation, поэтому оно разделяет повторные входы в текущий шаг.
  */
+export type AttemptsPluginOptions<TContext extends Context> = {
+  maxAttempts?: number
+  onLimitReached?: LimitHandler<TContext>
+}
+
 export class AttemptsPlugin<
   TContext extends Context = Context,
 > extends FormStepPlugin<TContext, 'attempts'> {
   public readonly name = 'attempts' as const
 
-  private stepId: string
-  private maxAttempts = 3
+  private stepId!: string
+  private maxAttempts: number
   private limitHandler?: LimitHandler<TContext>
-  private attemptsSession: AttemptsSession<TContext>
+  private attemptsSession!: AttemptsSession
 
   /**
    * Создаёт и подготавливает плагин. Стандартный лимит — 3 попытки.
@@ -41,16 +46,26 @@ export class AttemptsPlugin<
     stepId: string,
   ): Promise<AttemptsPlugin<TContext>> {
     const instance = new AttemptsPlugin<TContext>()
-    instance.stepId = stepId
-    instance.attemptsSession = getAttemptsSession(conversation, stepId)
-
-    await instance.ensureState()
-
+    await instance.setup(_ctx, conversation, stepId)
     return instance
   }
 
-  private constructor() {
+  constructor(options?: AttemptsPluginOptions<TContext>) {
     super()
+    this.maxAttempts = options?.maxAttempts ?? 3
+    if (options?.onLimitReached) {
+      this.limitHandler = options.onLimitReached
+    }
+  }
+
+  public async setup(
+    _ctx: TContext,
+    conversation: Conversation<TContext, TContext>,
+    stepId: string,
+  ): Promise<void> {
+    this.stepId = stepId
+    this.attemptsSession = getAttemptsSession(conversation, stepId)
+    await this.ensureState()
   }
 
   /**

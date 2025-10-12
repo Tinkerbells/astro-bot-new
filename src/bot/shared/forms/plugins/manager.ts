@@ -2,7 +2,9 @@ import type { Conversation } from '@grammyjs/conversations'
 
 import type { Context } from '#root/bot/context.js'
 
-import type { FormBuildOptions, FormStepPlugin } from './types.js'
+import type { FormBuildOptions } from './types.js'
+
+import { FormStepPlugin } from './types.js'
 
 // Вспомогательные типы
 type PluginMap<TContext extends Context> = {
@@ -16,6 +18,17 @@ type PluginClass<TContext extends Context> = {
     stepId: string,
   ) => Promise<FormStepPlugin<TContext, string>> | FormStepPlugin<TContext, string>
 }
+
+type PluginFactory<TContext extends Context> = (
+  ctx: TContext,
+  conversation: Conversation<TContext, TContext>,
+  stepId: string,
+) => Promise<FormStepPlugin<TContext, string>> | FormStepPlugin<TContext, string>
+
+type PluginDefinition<TContext extends Context> =
+  | PluginClass<TContext>
+  | PluginFactory<TContext>
+  | FormStepPlugin<TContext, string>
 
 type PluginManagerOptions = {
   onCleanup?: () => Promise<void> | void
@@ -40,10 +53,35 @@ export class PluginManager<
   /**
    * Регистрирует массив плагинов через статический метод init
    */
-  public async use(plugins: readonly PluginClass<TContext>[]): Promise<void> {
+  public async use(plugins: readonly PluginDefinition<TContext>[]): Promise<void> {
     for (const Plugin of plugins) {
-      // Создаём и инициализируем плагин через статический метод init
-      const plugin = await Plugin.init(this.ctx, this.conversation, this.stepId)
+      let plugin: FormStepPlugin<TContext, string> | null = null
+
+      if (Plugin instanceof FormStepPlugin) {
+        plugin = Plugin
+        if (typeof plugin.setup === 'function') {
+          await plugin.setup(this.ctx, this.conversation, this.stepId)
+        }
+      }
+      else if (typeof (Plugin as PluginClass<TContext>).init === 'function') {
+        plugin = await (Plugin as PluginClass<TContext>).init(this.ctx, this.conversation, this.stepId)
+      }
+      else if (typeof Plugin === 'function') {
+        const candidate = await (Plugin as PluginFactory<TContext>)(
+          this.ctx,
+          this.conversation,
+          this.stepId,
+        )
+        plugin = candidate
+      }
+
+      if (!plugin) {
+        throw new Error('Invalid plugin definition provided to form step')
+      }
+
+      if (typeof plugin.setup === 'function' && !(Plugin instanceof FormStepPlugin)) {
+        await plugin.setup(this.ctx, this.conversation, this.stepId)
+      }
 
       const pluginName = plugin.name as keyof TPlugins & string
       if (this.plugins.has(pluginName)) {

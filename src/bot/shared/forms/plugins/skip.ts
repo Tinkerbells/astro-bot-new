@@ -12,6 +12,16 @@ type SkipResultFactory<TContext extends Context> = (
   ctx: TContext,
 ) => Promise<FormValidateResult<unknown>> | FormValidateResult<unknown>
 
+type SkipResultSource<TContext extends Context> =
+  | FormValidateResult<unknown>
+  | ((ctx: TContext) => Promise<FormValidateResult<unknown>> | FormValidateResult<unknown>)
+
+export type SkipPluginOptions<TContext extends Context> = {
+  text?: string
+  callbackData?: string
+  skipResult?: SkipResultSource<TContext>
+}
+
 /**
  * Плагин добавляет поддержку «пропуска» шага формы через inline‑кнопку и
  * позволяет задать значение, которое вернётся при выборе пропуска.
@@ -36,8 +46,17 @@ export class SkipPlugin<
     return new SkipPlugin<TContext>()
   }
 
-  private constructor() {
+  constructor(options?: SkipPluginOptions<TContext>) {
     super()
+    if (options?.text) {
+      this.text = options.text
+    }
+    if (options?.callbackData) {
+      this.callbackData = options.callbackData
+    }
+    if (options?.skipResult) {
+      this.setSkipResult(options.skipResult)
+    }
   }
 
   /**
@@ -53,12 +72,14 @@ export class SkipPlugin<
   /**
    * Определяет, какой результат вернётся при нажатии на кнопку Skip.
    */
-  public setSkipResult<TResult>(
-    factory: (
-      ctx: TContext,
-    ) => Promise<FormValidateResult<TResult>> | FormValidateResult<TResult>,
-  ): void {
-    this.skipResultFactory = factory as SkipResultFactory<TContext>
+  public setSkipResult(result: SkipResultSource<TContext>): void {
+    if (typeof result === 'function') {
+      this.skipResultFactory = result as SkipResultFactory<TContext>
+      return
+    }
+
+    const staticResult = result
+    this.skipResultFactory = async () => staticResult
   }
 
   /**

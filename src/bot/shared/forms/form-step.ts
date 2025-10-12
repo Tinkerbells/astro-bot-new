@@ -9,7 +9,6 @@ import type { FormBuildOptions, FormStepPlugin } from './plugins/index.js'
 
 import { AttemptsPlugin, PluginManager, SkipPlugin } from './plugins/index.js'
 
-// Тип для класса плагина со статическим методом init
 type PluginClass<TContext extends Context> = {
   init: (
     ctx: TContext,
@@ -18,25 +17,37 @@ type PluginClass<TContext extends Context> = {
   ) => Promise<FormStepPlugin<TContext, string, undefined>> | FormStepPlugin<TContext, string, undefined>
 }
 
-// Извлекаем instance type из класса плагина
-type InferPluginFromClass<TClass> = TClass extends { init: (...args: any[]) => infer TReturn }
-  ? TReturn extends Promise<infer TPlugin> ? TPlugin : TReturn : never
+type PluginFactory<TContext extends Context> = (
+  ctx: TContext,
+  conversation: Conversation<TContext, TContext>,
+  stepId: string,
+) => Promise<FormStepPlugin<TContext, string, undefined>> | FormStepPlugin<TContext, string, undefined>
 
-// Получаем карту плагинов из массива классов
-type InferPlugins<TConstructors extends readonly unknown[]> = {
-  [P in InferPluginFromClass<
-    Extract<TConstructors[number], PluginClass<any>>
-  > as P extends { name: infer N extends string } ? N : never]: P
+type PluginInput<TContext extends Context> =
+  | PluginClass<TContext>
+  | PluginFactory<TContext>
+  | FormStepPlugin<TContext, string, undefined>
+
+type ExtractPlugin<TDefinition> = Awaited<
+  TDefinition extends { init: (...args: any[]) => infer TReturn } ? TReturn : TDefinition extends (...args: any[]) => infer TReturn ? TReturn : TDefinition extends FormStepPlugin<any, any, any> ? TDefinition : never
+>
+
+type NormalizePlugin<TContext extends Context, TDefinition> = ExtractPlugin<TDefinition> extends FormStepPlugin<infer _C, infer N extends string, infer Config>
+  ? ExtractPlugin<TDefinition> & FormStepPlugin<TContext, N, Config>
+  : FormStepPlugin<TContext, string, undefined>
+
+type InferPlugins<TConstructors extends readonly unknown[], TContext extends Context> = {
+  [P in TConstructors[number]as ExtractPlugin<P> extends { name: infer N extends string } ? N : never]: NormalizePlugin<TContext, P>
 }
 
 type FormStepHelpers<
   TContext extends Context,
   TInput,
-  TConstructors extends readonly unknown[],
+  TConstructors extends readonly PluginInput<TContext>[],
 > = {
   ctx: TContext
   conversation: Conversation<TContext, TContext>
-  plugins: PluginManager<TContext, InferPlugins<TConstructors>>
+  plugins: PluginManager<TContext, InferPlugins<TConstructors, TContext>>
   validate: (input: TInput) => Promise<void>
   prompt: () => Promise<any>
   form: {
@@ -49,7 +60,7 @@ type FormStepConfig<
   TContext extends Context,
   TInput,
   TOutput,
-  TConstructors extends readonly unknown[],
+  TConstructors extends readonly PluginInput<TContext>[],
 > = {
   stepId?: string
   plugins?: TConstructors
@@ -74,7 +85,7 @@ const createUniqueId = () => randomUUID()
  */
 export function formStep<TContext extends Context = Context>() {
   return <
-    const TConstructors extends readonly unknown[],
+    const TConstructors extends readonly PluginInput<TContext>[],
     TInput = any,
     TOutput = any,
   >(
@@ -84,7 +95,7 @@ export function formStep<TContext extends Context = Context>() {
     const stepId = config.stepId ?? `formStep_${createUniqueId()}`
 
     return ({ ctx, conversation }) => {
-      let pluginManager: PluginManager<TContext, InferPlugins<TConstructors>> | null = null
+      let pluginManager: PluginManager<TContext, InferPlugins<TConstructors, TContext>> | null = null
       let initPromise: Promise<void> | null = null
 
       const resetState = () => {
@@ -95,7 +106,7 @@ export function formStep<TContext extends Context = Context>() {
       const ensurePlugins = async () => {
         if (!initPromise) {
           initPromise = (async () => {
-            pluginManager = new PluginManager<TContext, InferPlugins<TConstructors>>(
+            pluginManager = new PluginManager<TContext, InferPlugins<TConstructors, TContext>>(
               ctx,
               conversation,
               stepId,
@@ -107,8 +118,7 @@ export function formStep<TContext extends Context = Context>() {
             )
 
             if (config.plugins) {
-              const pluginClasses = config.plugins as readonly PluginClass<TContext>[]
-              await pluginManager.use(pluginClasses)
+              await pluginManager.use(config.plugins as readonly PluginInput<TContext>[])
             }
           })()
         }
@@ -174,7 +184,18 @@ const nameSchema = v.pipe(
 )
 
 export const exampleFormStep = formStep<Context>()({
-  plugins: [SkipPlugin, AttemptsPlugin],
+  plugins: [
+    new SkipPlugin({
+      skipResult: () => ({ ok: true, value: null }),
+    }),
+    new AttemptsPlugin({
+      maxAttempts: 3,
+      onLimitReached: async (ctx: Context) => {
+        await ctx.reply('You are out of limit')
+        return { ok: true, value: null }
+      },
+    }),
+  ],
 
   async validate(input) {
     if (input === null)
@@ -194,16 +215,6 @@ export const exampleFormStep = formStep<Context>()({
 
   async build({ plugins, validate, prompt, form }) {
     await prompt()
-    const skip = plugins.get('skip')
-    skip.setSkipResult(() => ({ ok: true, value: null }))
-
-    const attempts = plugins.get('attempts')
-    attempts.setMaxAttempts(3)
-    attempts.setOnLimitReached(async (ctx: Context) => {
-      await ctx.reply('You are out of limit')
-      return { ok: true, value: null }
-    })
-
     const name = await form.build({
       validate: async (ctx) => {
         const text = ctx.message?.text
@@ -231,7 +242,16 @@ export const exampleFormStep = formStep<Context>()({
 
 export const exampleFormStep2 = formStep<Context>()({
   stepId: 'exampleFormStep2', // Явно указываем другой stepId
-  plugins: [SkipPlugin, AttemptsPlugin],
+  plugins: [
+    new SkipPlugin(),
+    new AttemptsPlugin({
+      maxAttempts: 3,
+      onLimitReached: async (ctx: Context) => {
+        await ctx.reply('You are out of limit')
+        return { ok: true, value: null }
+      },
+    }),
+  ],
 
   async validate(input) {
     if (input === null)
@@ -254,13 +274,6 @@ export const exampleFormStep2 = formStep<Context>()({
     await prompt()
     const skip = plugins.get('skip')
     skip.setSkipResult(() => ({ ok: true, value: null }))
-
-    const attempts = plugins.get('attempts')
-    attempts.setMaxAttempts(3)
-    attempts.setOnLimitReached(async (ctx: Context) => {
-      await ctx.reply('You are out of limit')
-      return { ok: true, value: null }
-    })
 
     const name = await form.build({
       validate: async (ctx) => {
