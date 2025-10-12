@@ -6,6 +6,7 @@ import type { AscendantsRepository } from '#root/data/repositories/ascendants-re
 
 import { logger } from '#root/shared/logger.js'
 import { safeAsync } from '#root/shared/index.js'
+import { Zodiac } from '#root/domain/entities/index.js'
 import { ApiDataError } from '#root/shared/api-client/error/index.js'
 import { createProfileMessage } from '#root/bot/shared/menus/index.js'
 import { FORBIDDEN_ERROR_INFO, NOT_FOUND_ERROR_INFO } from '#root/shared/http/index.js'
@@ -48,6 +49,10 @@ export class AscendantsService {
     const userAscendant = userAscendants && userAscendants.length > 0 ? userAscendants[0] : null
 
     if (userAscendant) {
+      // TODO: добавить сюда i18n ключи
+      const sign = Zodiac.getByIndex(userAscendant.zodiacId)
+      await ctx.reply(`Ваш асцендент лежит в : ${sign.name}`)
+      await ctx.reply(sign.getIcon())
       await ctx.safeReplyMarkdown(userAscendant.interpretation)
       return
     }
