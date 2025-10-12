@@ -114,6 +114,20 @@ natal-charts-user-generating = 🌟 Generating your natal chart...
 natal-charts-user-fetching = 🔮 Fetching your natal chart...
 natal-charts-error = ⚠️ Failed to get natal chart. Please try later.
 natal-charts-guest-success = ✅ Guest natal chart created!
+
+ascendants-menu-title = 🌅 Choose ascendant type:
+ascendants-menu-my-ascendant = 🌟 My ascendant
+ascendants-menu-get-my-ascendant = ✨ Get my ascendant
+ascendants-menu-guest-ascendant = 👤 Guest ascendant
+ascendants-menu-back = ◀️ Back
+ascendants-guest-generating = 🌌 The universe is discovering the ascendant...
+ascendants-user-generating = ✨ The universe is discovering your ascendant...
+ascendants-user-fetching = 🌅 The universe is revealing your ascendant...
+ascendants-error = ⚠️ Failed to get ascendant. Please try later.
+ascendants-guest-success = ✅ Guest ascendant created!
+ascendants-user-success = ✅ Your ascendant is ready!
+ascendants-user-missing-data = ⚠️ Please complete birth date, time, and location in your profile to get an ascendant.
+ascendants-guest-missing-data = ⚠️ Provide birth data in your profile to request a guest ascendant.
 natal-charts-user-success = ✅ Your natal chart is ready!
 natal-charts-user-missing-data = ⚠️ Please complete birth date, time, and location in your profile to get a natal chart.
 natal-charts-guest-missing-data = ⚠️ Provide birth data in your profile to request a guest natal chart.
@@ -125,3 +139,6 @@ error-quota-limit = ⚠️ Request quota limit reached. Please try again later.
 
 ## Utils
 fetching = The Universe thinks...
+
+
+skip = Skip
