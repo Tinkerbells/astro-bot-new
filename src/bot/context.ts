@@ -10,8 +10,10 @@ import type { Config } from '#root/shared/config.js'
 import type { Logger } from '#root/shared/logger.js'
 import type { User } from '#root/domain/entities/user/user.js'
 import type { UserService } from '#root/bot/services/user-service/index.js'
+import type { NatalChartCompatibilitiesRepositoryDTO } from '#root/data/index.js'
 import type { AscendantsService } from '#root/bot/services/ascendants-service/index.js'
 import type { NatalChartsService } from '#root/bot/services/natal-charts-service/index.js'
+import type { NatalChartCompatibilitiesService } from '#root/bot/services/natal-chart-compatibilities-service/index.js'
 
 import type { SafeReply } from './shared/helpers/safe-reply.js'
 import type { AttemptsState } from './shared/forms/plugins/attempts.js'
@@ -24,6 +26,8 @@ export type SessionData = {
   onboarding: OnboardingState
   __language_code?: string
   __formAttempts?: AttemptsState
+  lastCompatibilityInterpretation?: NatalChartCompatibilitiesRepositoryDTO.NatalChartCompatibilityInterpretation
+  compatibilitiesList?: NatalChartCompatibilitiesRepositoryDTO.NatalChartCompatibilityDTO[]
 }
 
 type ExtendedContextFlavor = {
@@ -32,6 +36,7 @@ type ExtendedContextFlavor = {
   userService: UserService
   natalChartsService: NatalChartsService
   ascendantsService: AscendantsService
+  natalChartCompatibilitiesService: NatalChartCompatibilitiesService
   cityService: CityService
   safeReply: SafeReply
   safeReplyMarkdown: SafeReplyMarkdown

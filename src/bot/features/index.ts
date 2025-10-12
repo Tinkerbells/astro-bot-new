@@ -1,5 +1,6 @@
 export * from './admin/index.js'
 export * from './ascendants/index.js'
+export * from './compatibilities/index.js'
 export * from './language/index.js'
 export * from './natal-charts/index.js'
 export * from './onboarding/index.js'
