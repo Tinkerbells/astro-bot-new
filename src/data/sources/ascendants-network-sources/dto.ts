@@ -18,8 +18,21 @@ export class AscendantDTO {
   @IsInt()
   userId: number
 
-  @IsObject()
-  data: unknown
+  @IsInt()
+  @Min(1)
+  zodiacId: number
+
+  @IsInt()
+  rawDegrees: number
+
+  @IsInt()
+  deg: number
+
+  @IsInt()
+  min: number
+
+  @IsInt()
+  sec: number
 
   @IsString()
   interpretation: string
@@ -35,7 +48,7 @@ export class AscendantDTO {
 
 export class GuestAscendantResponseDTO {
   @IsObject()
-  ascendant: unknown
+  ascendant: AscendantDTO
 
   @IsString()
   interpretation: string
