@@ -10,6 +10,8 @@ export type FormBuildOptions<
 > = {
   validate: (ctx: TContext) => Promise<FormValidateResult<TValue>>
   otherwise?: (ctx: TContext) => Promise<void>
+  collationKey?: string
+  maxMilliseconds?: number
 }
 
 export abstract class FormStepPlugin<
