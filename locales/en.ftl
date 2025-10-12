@@ -132,6 +132,41 @@ natal-charts-user-success = ✅ Your natal chart is ready!
 natal-charts-user-missing-data = ⚠️ Please complete birth date, time, and location in your profile to get a natal chart.
 natal-charts-guest-missing-data = ⚠️ Provide birth data in your profile to request a guest natal chart.
 
+## Compatibilities Feature
+
+compatibilities-menu-title = 💞 Choose compatibility type:
+compatibilities-menu-user-guest = 👥 Compatibility with guest
+compatibilities-menu-my-compatibilities = 📋 My Compatibilities
+compatibilities-menu-back = ◀️ Back
+compatibilities-guest-generating = 🌌 The universe is discovering your compatibility...
+compatibilities-user-generating = ✨ The universe is revealing compatibility...
+compatibilities-error = ⚠️ Failed to calculate compatibility. Please try later.
+compatibilities-guest-success = ✅ Compatibility calculated!
+compatibilities-premium-section-locked = 🔒 This section is available only for premium users. Subscribe or unlock the full compatibility report separately to learn more about your relationship.
+
+## Compatibility Sections Headers
+compatibilities-section-introduction = 🌟 Introduction
+compatibilities-section-profiles = 👤 Participants Profiles
+compatibilities-section-element-balance = ⚖️ Element Balance
+compatibilities-section-tense-aspects = ⚡ Tense Aspects
+compatibilities-section-harmonious-aspects = 🌈 Harmonious Aspects
+compatibilities-section-house-overlays = 🏠 House Overlays
+compatibilities-section-intimacy = 💋 Intimacy
+compatibilities-section-finances = 💰 Finances
+compatibilities-section-infidelity = 💔 Fidelity and Infidelity
+compatibilities-section-composite-chart = 🔮 Composite Chart
+compatibilities-section-conclusions = 📝 Conclusions and Recommendations
+
+## Compatibility Buttons
+compatibilities-button-unlock-full = 🔓 Unlock Full Analysis
+
+## Compatibility Lists
+compatibilities-your-compatibilities = Your Compatibilities
+compatibilities-no-compatibilities = You don't have any calculated compatibilities yet
+
+## Locale
+locale-code = en-US
+
 ## Errors
 
 error-quota-limit = ⚠️ Request quota limit reached. Please try again later.

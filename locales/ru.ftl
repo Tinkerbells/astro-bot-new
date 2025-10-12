@@ -84,7 +84,7 @@ profile-info =
 
 profile-menu-ascendant = 🌅 Асцендент
 profile-menu-natal-chart = 🔮 Натальная карта
-profile-menu-compatibility = 💕 Проверить совместимость
+profile-menu-compatibility = 💕 Совместимость
 profile-menu-tarot = 🃏 Расклады Таро
 profile-menu-settings = ⚙️ Настройки
 profile-menu-restart-onboarding = 🔄 Пройти регистрацию заново
@@ -137,6 +137,41 @@ ascendants-guest-missing-data = ⚠️ Уточните данные рожде�
 natal-charts-user-success = ✅ Ваша натальная карта готова!
 natal-charts-user-missing-data = ⚠️ Заполните дату, время и место рождения в профиле, чтобы получить натальную карту.
 natal-charts-guest-missing-data = ⚠️ Уточните данные рождения в профиле, чтобы запросить гостевую натальную карту.
+
+## Compatibilities Feature
+
+compatibilities-menu-title = 💞 Выберите тип совместимости:
+compatibilities-menu-user-guest = 👥 Совместимость с гостем
+compatibilities-menu-my-compatibilities = 📋 Мои совместимости
+compatibilities-menu-back = ◀️ Назад
+compatibilities-guest-generating = 🌌 Вселенная узнаёт вашу совместимость...
+compatibilities-user-generating = ✨ Вселенная раскрывает совместимость...
+compatibilities-error = ⚠️ Не удалось рассчитать совместимость. Попробуйте позже.
+compatibilities-guest-success = ✅ Совместимость рассчитана!
+compatibilities-premium-section-locked = 🔒 Этот раздел доступен только для премиум пользователей. Оформите подписку или откройте полную совместимость за отдельную плату, чтобы узнать больше о ваших отношениях.
+
+## Compatibility Sections Headers
+compatibilities-section-introduction = 🌟 Введение
+compatibilities-section-profiles = 👤 Профили участников
+compatibilities-section-element-balance = ⚖️ Баланс элементов
+compatibilities-section-tense-aspects = ⚡ Напряженные аспекты
+compatibilities-section-harmonious-aspects = 🌈 Гармоничные аспекты
+compatibilities-section-house-overlays = 🏠 Наложения домов
+compatibilities-section-intimacy = 💋 Интимная сфера
+compatibilities-section-finances = 💰 Финансовая сфера
+compatibilities-section-infidelity = 💔 Верность и измены
+compatibilities-section-composite-chart = 🔮 Композитная карта
+compatibilities-section-conclusions = 📝 Выводы и рекомендации
+
+## Compatibility Buttons
+compatibilities-button-unlock-full = 🔓 Открыть полный анализ
+
+## Compatibility Lists
+compatibilities-your-compatibilities = Ваши совместимости
+compatibilities-no-compatibilities = У вас пока нет рассчитанных совместимостей
+
+## Locale
+locale-code = ru-RU
 
 ## Errors
 

@@ -5,9 +5,6 @@ import type { Context } from '#root/bot/context.js'
 
 import { ONBOARDING_CONVERSATION } from '#root/bot/features/index.js'
 
-import { ASCENDANTS_MENU_ID } from '../../ascendants-menu/menu.js'
-import { NATAL_CHARTS_MENU_ID } from '../../natal-charts-menu/menu.js'
-
 /**
  * Интерфейс для MenuRange (работает с обычным Menu и Conversation Menu)
  */
@@ -16,26 +13,60 @@ import { NATAL_CHARTS_MENU_ID } from '../../natal-charts-menu/menu.js'
  * Заполняет MenuRange кнопками профиля
  * Используется как в обычном меню, так и в conversations
  */
+type ProfileMenuOptions = {
+  natalChartsMenuId?: string
+  ascendantsMenuId?: string
+  compatibilitiesMenuId?: string
+}
 
 export function buildProfileMenuRange(
   range: MenuRange<Context> | ConversationMenuRange<Context>,
+  options: ProfileMenuOptions = {},
 ) {
-  range.submenu(
-    ctx => ctx.t('profile-menu-ascendant'),
-    ASCENDANTS_MENU_ID,
-  )
+  if (options.ascendantsMenuId) {
+    range.submenu(
+      ctx => ctx.t('profile-menu-ascendant'),
+      options.ascendantsMenuId,
+    )
+  }
+  else {
+    range.text(
+      ctx => ctx.t('profile-menu-ascendant'),
+      async (ctx) => {
+        await ctx.reply(ctx.t('profile-ascendant-message'))
+      },
+    )
+  }
 
-  range.submenu(
-    ctx => ctx.t('profile-menu-natal-chart'),
-    NATAL_CHARTS_MENU_ID,
-  ).row()
+  if (options.natalChartsMenuId) {
+    range.submenu(
+      ctx => ctx.t('profile-menu-natal-chart'),
+      options.natalChartsMenuId,
+    ).row()
+  }
+  else {
+    range.text(
+      ctx => ctx.t('profile-menu-natal-chart'),
+      async (ctx) => {
+        await ctx.reply(ctx.t('profile-natal-chart-message'))
+      },
+    ).row()
+  }
 
-  range.text(
-    ctx => ctx.t('profile-menu-compatibility'),
-    async (ctx) => {
-      await ctx.reply(ctx.t('profile-compatibility-message'))
-    },
-  )
+  if (options.compatibilitiesMenuId) {
+    range.submenu(
+      ctx => ctx.t('profile-menu-compatibility'),
+      options.compatibilitiesMenuId,
+    )
+  }
+  else {
+    range.text(
+      ctx => ctx.t('profile-menu-compatibility'),
+      async (ctx) => {
+        await ctx.reply(ctx.t('profile-compatibility-message'))
+      },
+    )
+  }
 
   range.text(
     ctx => ctx.t('profile-menu-tarot'),
