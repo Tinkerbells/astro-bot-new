@@ -9,11 +9,18 @@ import type { Context } from '#root/bot/context.js'
 /**
  * Состояние одного экрана меню
  */
+export type MenuScreenState = {
+  viewId: string
+  payload?: Record<string, unknown>
+}
+
 export type MenuState = {
-  textKey: string // i18n ключ для текста
-  textParams?: TranslationVariables<string> // параметры для i18n
-  menuId: string // ID меню
-  data?: Record<string, any> // дополнительные данные
+  viewId?: string
+  payload?: Record<string, unknown>
+  textKey?: string // i18n ключ для текста (legacy)
+  textParams?: TranslationVariables<string> // параметры для i18n (legacy)
+  menuId?: string // ID меню (legacy)
+  data?: Record<string, unknown> // дополнительные данные (legacy)
 }
 
 /**
@@ -24,9 +31,15 @@ export type MenuNavigationData = {
   stack: MenuState[] // стек состояний
 }
 
+export type MenuScreenDefinition = {
+  render: (ctx: Context, state: MenuScreenState) => string
+  onEnter?: (ctx: Context, state: MenuScreenState) => Promise<void> | void
+}
+
 type MenuDefinition = {
   getRootMenu?: () => Menu<Context>
   buildConversationRange?: (ctx: Context, range: ConversationMenuRange<Context>) => void | Promise<void>
+  screens?: Record<string, MenuScreenDefinition>
 }
 
 const menuRegistry = new Map<string, MenuDefinition>()
@@ -46,23 +59,27 @@ export function getMenuDefinition(menuId: string): MenuDefinition | undefined {
 type ReplyMarkup = NonNullable<Other<'sendMessage', 'chat_id' | 'text'>['reply_markup']>
 type ReplyOptions = Omit<Other<'sendMessage', 'chat_id' | 'text'>, 'reply_markup'>
 
-type ReplyWithMenuOptions = {
+type ReplyWithMenuBaseOptions = {
   menuKey: string
-  textKey: string
-  textParams?: TranslationVariables<string>
   replyMarkup: ReplyMarkup
   other?: ReplyOptions
 }
 
+type ReplyWithMenuScreenOptions = ReplyWithMenuBaseOptions & {
+  screen: MenuScreenState
+}
+
+type ReplyWithMenuLegacyOptions = ReplyWithMenuBaseOptions & {
+  textKey: string
+  textParams?: TranslationVariables<string>
+}
+
+type ReplyWithMenuOptions = ReplyWithMenuScreenOptions | ReplyWithMenuLegacyOptions
+
 type ReplyWithConversationMenuOptions = {
   conversationCtx: Context
   externalCtx: Context
-  menuKey: string
-  textKey: string
-  textParams?: TranslationVariables<string>
-  replyMarkup: ReplyMarkup
-  other?: ReplyOptions
-}
+} & ReplyWithMenuOptions
 
 export class MenuManager {
   constructor(private readonly ctx: Context) { }
