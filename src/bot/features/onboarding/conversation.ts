@@ -4,12 +4,13 @@ import type { Context } from '#root/bot/context.js'
 
 import { safeAsync } from '#root/shared/index.js'
 import { User } from '#root/domain/entities/index.js'
+import { MenuId } from '#root/bot/shared/menus/menu-ids.js'
 import { updateSessionUser } from '#root/bot/shared/helpers/user.js'
+import { PROFILE_MENU_TEXT_KEY } from '#root/bot/shared/menus/index.js'
 import { birthDataForm } from '#root/bot/shared/forms/birth-data/form.js'
 import { OnboardingStatus } from '#root/bot/shared/types/onboarding.types.js'
 import { updateOnboardingStatus } from '#root/bot/shared/helpers/onboarding.js'
 import { setConversationLocale } from '#root/bot/shared/helpers/conversation-locale.js'
-import { buildProfileMenuRange, createProfileMessage, PROFILE_MENU_ID } from '#root/bot/shared/menus/index.js'
 
 export const ONBOARDING_CONVERSATION = 'onboarding'
 
@@ -28,12 +29,19 @@ export async function onboardingConversation(
 
   await ctx.safeReply(ctx.t('onboarding-start'))
 
-  const data = await birthDataForm(checkpoint, ctx, conversation)
+  const data = await birthDataForm(checkpoint, ctx, conversation, {
+    canSkipBirthTime: true,
+    conversationId: ONBOARDING_CONVERSATION,
+  })
 
-  const birthTimeUTC = data.birthTime && User.convertBirthTimeToUTC(data.birthTime)
+  const birthTimeUTC = data.birthTime && User.convertBirthTimeToUTC(
+    data.birthDate,
+    data.birthTime,
+    data.birthPlace?.timezone,
+  )
 
-  const [updateError, updatedUser] = await safeAsync(conversation.external((ctx) => {
-    ctx.userService.updateUser(
+  const [updateError] = await safeAsync(conversation.external(async (ctx) => {
+    const [error, user] = await safeAsync(ctx.userService.updateUser(
       { id: ctx.session.user.id },
       {
         birthDate: data.birthDate!,
@@ -42,15 +50,19 @@ export async function onboardingConversation(
         longitude: data.birthPlace?.longitude,
         timezone: data.birthPlace?.timezone,
       },
-    )
-    if (updateError || !updatedUser) {
-      ctx.logger.error({ error: updateError }, 'Failed to update user during onboarding')
-      throw new Error('Failed to update user')
+    ))
+    if (error || !user) {
+      ctx.logger.error({ error }, 'Failed to update user during onboarding')
+      throw error
     }
-    updateSessionUser(ctx, updatedUser)
+    updateSessionUser(ctx, user)
     updateOnboardingStatus(ctx, OnboardingStatus.Completed)
   }),
   )
+
+  if (updateError) {
+    await ctx.reply(ctx.t('errors-something-went-wrong'))
+  }
 
   // Удаляем reply клавиатуру (geo request) перед отправкой меню профиля
   await ctx.reply(ctx.t('onboarding-complete'), {
@@ -58,12 +70,25 @@ export async function onboardingConversation(
   })
 
   // Создаем меню для conversation и отправляем сообщение с профилем
-  const message = await conversation.external(ctx => createProfileMessage(ctx).getText())
-  const menu = conversation.menu(PROFILE_MENU_ID).dynamic((_, range) => {
-    buildProfileMenuRange(range)
-  })
+  const menu = ctx.menuManager.createConversationMenu(conversation, MenuId.Profile)
 
-  await ctx.safeReply(message, {
-    reply_markup: menu,
-  })
+  const sendProfileMenuInConversation = async () => {
+    if (!menu) {
+      ctx.logger.error({ menuId: MenuId.Profile }, 'Profile conversation menu is not registered')
+      await ctx.safeReply(ctx.t(PROFILE_MENU_TEXT_KEY))
+      return
+    }
+
+    await conversation.external(async (externalCtx) => {
+      await ctx.menuManager.replyWithConversationMenu({
+        conversationCtx: ctx,
+        externalCtx,
+        menuKey: MenuId.Profile,
+        textKey: PROFILE_MENU_TEXT_KEY,
+        replyMarkup: menu,
+      })
+    })
+  }
+
+  await sendProfileMenuInConversation()
 }
