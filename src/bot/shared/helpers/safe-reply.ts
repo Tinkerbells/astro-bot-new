@@ -1,3 +1,4 @@
+import type { Message } from 'grammy/types'
 import type { Other } from '@grammyjs/hydrate'
 
 import type { Context } from '#root/bot/context.js'
@@ -9,16 +10,19 @@ export function safeReply(ctx: Context) {
     text: string,
     other?: Other<'sendMessage', 'chat_id' | 'text'>,
     errorMessage?: string,
-  ) => {
+  ): Promise<Message.TextMessage | null> => {
     if (!errorMessage) {
       errorMessage = ctx.t('errors-something-went-wrong')
     }
-    const [error] = await safeAsync(ctx.reply(text, other))
+    const [error, sentMessage] = await safeAsync(ctx.reply(text, other))
 
     if (error) {
       ctx.logger.error({ error }, errorMessage)
-      await safeAsync(ctx.reply(errorMessage))
+      const [, fallbackMessage] = await safeAsync(ctx.reply(errorMessage))
+      return fallbackMessage
     }
+
+    return sentMessage
   }
 }
 
@@ -35,8 +39,8 @@ export function safeReply(ctx: Context) {
  * (по умолчанию текст локализованной ошибки `errors-something-went-wrong`).
  *
  * @param {Context} ctx - Контекст Grammy, передаваемый в хэндлер.
- * @returns {(text: string, other?: Other<'sendMessage', 'chat_id' | 'text'>, errorMessage?: string) => Promise<void>}
- * Функция для безопасной отправки сообщений.
+ * @returns {(text: string, other?: Other<'sendMessage', 'chat_id' | 'text'>, errorMessage?: string) => Promise<Message.TextMessage | null>}
+ * Функция для безопасной отправки сообщений, возвращающая отправленное сообщение или `null` при ошибке.
  *
  * @example
  * const reply = safeReply(ctx)

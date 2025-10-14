@@ -12,6 +12,6 @@ import type { Context } from '#root/bot/context.js'
  * @param ctx - Контекст бота
  */
 export async function setConversationLocale(conversation: Conversation<Context, Context>, ctx: Context) {
-  const { __language_code: locale = 'ru' } = await conversation.external(ctx => ctx.session)
-  ctx.i18n.useLocale(locale)
+  // const { __language_code: locale = 'ru' } = await conversation.external(ctx => ctx.session)
+  ctx.i18n.useLocale('ru')
 }
