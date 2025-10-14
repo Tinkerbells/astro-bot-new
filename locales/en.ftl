@@ -134,6 +134,7 @@ ascendants-guest-missing-data = ⚠️ Provide birth data in your profile to req
 natal-charts-user-success = ✅ Your natal chart is ready!
 natal-charts-user-missing-data = ⚠️ Please complete birth date, time, and location in your profile to get a natal chart.
 natal-charts-guest-missing-data = ⚠️ Provide birth data in your profile to request a guest natal chart.
+natal-chart-interpretation-text = { $interpretation }
 
 ## Compatibilities Feature
 
@@ -166,6 +167,7 @@ compatibilities-button-unlock-full = 🔓 Unlock Full Analysis
 ## Compatibility Lists
 compatibilities-your-compatibilities = Your Compatibilities
 compatibilities-no-compatibilities = You don't have any calculated compatibilities yet
+compatibility-interpretation-text = { $interpretation }
 
 ## Locale
 locale-code = en-US

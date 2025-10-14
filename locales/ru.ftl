@@ -141,6 +141,7 @@ ascendants-guest-missing-data = ⚠️ Уточните данные рожде�
 natal-charts-user-success = ✅ Ваша натальная карта готова!
 natal-charts-user-missing-data = ⚠️ Заполните дату, время и место рождения в профиле, чтобы получить натальную карту.
 natal-charts-guest-missing-data = ⚠️ Уточните данные рождения в профиле, чтобы запросить гостевую натальную карту.
+natal-chart-interpretation-text = { $interpretation }
 
 ## Compatibilities Feature
 
@@ -173,6 +174,7 @@ compatibilities-button-unlock-full = 🔓 Открыть полный анали
 ## Compatibility Lists
 compatibilities-your-compatibilities = Ваши совместимости
 compatibilities-no-compatibilities = У вас пока нет рассчитанных совместимостей
+compatibility-interpretation-text = { $interpretation }
 
 ## Locale
 locale-code = ru-RU
