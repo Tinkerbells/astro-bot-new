@@ -36,12 +36,18 @@ export class NatalChartsService {
   ) {
     const user = ctx.session.user
 
+    if (!this.canGenerateUserChart(user)) {
+      await ctx.reply(ctx.t('natal-charts-user-missing-data'))
+      return
+    }
+
     const fetchingMessage = await ctx.reply(ctx.t('fetching'))
 
     const [userNatalChartError, userNatalChart] = await safeAsync(this.natalChartsRepository.getLatestForUser({ userId: Number(user.id) }))
 
     if (userNatalChartError && !this.isNotFoundApiError(userNatalChartError)) {
-      await fetchingMessage.editText(ctx.t('errors-something-went-wrong'))
+      await fetchingMessage.delete()
+      await ctx.reply(ctx.t('errors-something-went-wrong'))
       return
     }
 
@@ -50,26 +56,24 @@ export class NatalChartsService {
       return
     }
 
-    if (!this.canGenerateUserChart(user)) {
-      await fetchingMessage.editText(ctx.t('natal-charts-user-missing-data'))
-      return
-    }
-
     const [generateForUserError, generatedUserNatalChart] = await safeAsync(this.natalChartsRepository.generateForUser({ userId: Number(user.id) }))
 
     if (generateForUserError && !this.isQuotaLimitError(generateForUserError)) {
-      await fetchingMessage.editText(ctx.t('errors-something-went-wrong'))
+      await fetchingMessage.delete()
+      await ctx.reply(ctx.t('errors-something-went-wrong'))
       return
     }
 
     if (this.isQuotaLimitError(generateForUserError)) {
       // TODO: возможно лучше выводить ошибку с бэка, с форматированным временем окончания лимита
-      await fetchingMessage.editText(ctx.t('error-quota-limit'))
+      await fetchingMessage.delete()
+      await ctx.reply(ctx.t('error-quota-limit'))
       return
     }
 
     if (!generatedUserNatalChart) {
-      await fetchingMessage.editText(ctx.t('errors-something-went-wrong'))
+      await fetchingMessage.delete()
+      await ctx.reply(ctx.t('errors-something-went-wrong'))
       return
     }
 
@@ -85,18 +89,21 @@ export class NatalChartsService {
     const [guestNatalChartError, guestNatalChart] = await safeAsync(this.natalChartsRepository.generateGuest(dto))
 
     if (guestNatalChartError && !this.isQuotaLimitError(guestNatalChartError)) {
-      await fetchingMessage.editText(ctx.t('errors-something-went-wrong'))
+      await fetchingMessage.delete()
+      await ctx.reply(ctx.t('errors-something-went-wrong'))
       return
     }
 
     if (this.isQuotaLimitError(guestNatalChartError)) {
       // TODO: возможно лучше выводить ошибку с бэка, с форматированным временем окончания лимита
-      await fetchingMessage.editText(ctx.t('error-quota-limit'))
+      await fetchingMessage.delete()
+      await ctx.reply(ctx.t('error-quota-limit'))
       return
     }
 
     if (!guestNatalChart) {
-      await fetchingMessage.editText(ctx.t('errors-something-went-wrong'))
+      await fetchingMessage.delete()
+      await ctx.reply(ctx.t('errors-something-went-wrong'))
       return
     }
 
