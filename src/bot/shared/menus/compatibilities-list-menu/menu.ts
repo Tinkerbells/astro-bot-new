@@ -2,12 +2,12 @@ import { Menu } from '@grammyjs/menu'
 
 import type { Context } from '#root/bot/context.js'
 
+import { MenuId } from '../menu-ids.js'
 import { buildCompatibilitiesListMenuRange } from './utils/index.js'
-
-export const COMPATIBILITIES_LIST_MENU_ID = 'compatibilities-list-menu'
+import { registerMenuDefinition } from '../../services/menu-manager.js'
 
 export function createCompatibilitiesListMenu(): Menu<Context> {
-  const menu = new Menu<Context>(COMPATIBILITIES_LIST_MENU_ID)
+  const menu = new Menu<Context>(MenuId.CompatibilitiesList)
 
   menu.dynamic(async (ctx, range) => {
     buildCompatibilitiesListMenuRange(range, ctx)
@@ -17,3 +17,7 @@ export function createCompatibilitiesListMenu(): Menu<Context> {
 }
 
 export const compatibilitiesListMenu = createCompatibilitiesListMenu()
+
+registerMenuDefinition(MenuId.CompatibilitiesList, {
+  getRootMenu: () => compatibilitiesListMenu,
+})

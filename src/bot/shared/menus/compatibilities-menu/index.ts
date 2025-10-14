@@ -1,5 +1,5 @@
+export { MenuId } from '../menu-ids.js'
 export {
-  COMPATIBILITIES_MENU_ID,
   compatibilitiesMenu,
   createCompatibilitiesMenu,
 } from './menu.js'

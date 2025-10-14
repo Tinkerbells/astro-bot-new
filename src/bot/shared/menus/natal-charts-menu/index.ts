@@ -1,5 +1,5 @@
+export { MenuId } from '../menu-ids.js'
 export {
   createNatalChartsMenu,
-  NATAL_CHARTS_MENU_ID,
   natalChartsMenu,
 } from './menu.js'

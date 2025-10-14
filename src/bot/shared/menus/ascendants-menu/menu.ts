@@ -2,12 +2,12 @@ import { Menu } from '@grammyjs/menu'
 
 import type { Context } from '#root/bot/context.js'
 
+import { MenuId } from '../menu-ids.js'
 import { buildAscendantsMenuRange } from './utils/index.js'
-
-export const ASCENDANTS_MENU_ID = 'ascendants-menu'
+import { registerMenuDefinition } from '../../services/menu-manager.js'
 
 export function createAscendantsMenu(): Menu<Context> {
-  const menu = new Menu<Context>(ASCENDANTS_MENU_ID)
+  const menu = new Menu<Context>(MenuId.Ascendants)
 
   menu.dynamic(async (_, range) => {
     buildAscendantsMenuRange(range)
@@ -17,3 +17,7 @@ export function createAscendantsMenu(): Menu<Context> {
 }
 
 export const ascendantsMenu = createAscendantsMenu()
+
+registerMenuDefinition(MenuId.Ascendants, {
+  getRootMenu: () => ascendantsMenu,
+})
