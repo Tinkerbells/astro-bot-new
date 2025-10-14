@@ -82,6 +82,8 @@ profile-info =
   📍 City: { $city }
   ♈ Zodiac sign: { $zodiac }
 
+profile-menu-title = 📋 Main Menu
+
 profile-menu-ascendant = 🌅 Ascendant
 profile-menu-natal-chart = 🔮 Natal Chart
 profile-menu-compatibility = 💕 Check Compatibility
@@ -120,6 +122,7 @@ ascendants-menu-my-ascendant = 🌟 My ascendant
 ascendants-menu-get-my-ascendant = ✨ Get my ascendant
 ascendants-menu-guest-ascendant = 👤 Guest ascendant
 ascendants-menu-back = ◀️ Back
+ascendants-interpretation-text = { $interpretation }
 ascendants-guest-generating = 🌌 The universe is discovering the ascendant...
 ascendants-user-generating = ✨ The universe is discovering your ascendant...
 ascendants-user-fetching = 🌅 The universe is revealing your ascendant...
@@ -176,4 +179,5 @@ error-quota-limit = ⚠️ Request quota limit reached. Please try again later.
 fetching = The Universe thinks...
 
 
+cancel = Cancel
 skip = Skip

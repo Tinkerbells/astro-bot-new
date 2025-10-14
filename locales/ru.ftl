@@ -82,6 +82,8 @@ profile-info =
   📍 Город: { $city }
   ♈ Знак зодиака: { $zodiac }
 
+profile-menu-title = 📋 Главное меню
+
 profile-menu-ascendant = 🌅 Асцендент
 profile-menu-natal-chart = 🔮 Натальная карта
 profile-menu-compatibility = 💕 Совместимость
@@ -102,6 +104,7 @@ profile-field-missing = —
 
 fetching = ⏳ Вселенная думает...
 
+cancel = Отмена
 skip = Пропустить
 
 ## Error Messages
@@ -126,6 +129,7 @@ ascendants-menu-my-ascendant = 🌟 Мой асцендент
 ascendants-menu-get-my-ascendant = ✨ Узнать свой асцендент
 ascendants-menu-guest-ascendant = 👤 Гостевой асцендент
 ascendants-menu-back = ◀️ Назад
+ascendants-interpretation-text = { $interpretation }
 ascendants-guest-generating = 🌌 Вселенная узнаёт асцендент...
 ascendants-user-generating = ✨ Вселенная узнаёт ваш асцендент...
 ascendants-user-fetching = 🌅 Вселенная раскрывает ваш асцендент...

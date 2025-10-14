@@ -1,5 +1,7 @@
 export { AttemptsPlugin } from './attempts.js'
 export type { AttemptsPluginOptions } from './attempts.js'
+export { CancelPlugin } from './cancel.js'
+export type { CancelPluginOptions } from './cancel.js'
 export { PluginManager } from './manager.js'
 export { SkipPlugin } from './skip.js'
 export type { SkipPluginOptions } from './skip.js'
