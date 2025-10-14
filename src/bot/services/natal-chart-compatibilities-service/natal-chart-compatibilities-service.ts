@@ -11,7 +11,7 @@ import { FORBIDDEN_ERROR_INFO } from '#root/shared/http/index.js'
 import { ApiDataError } from '#root/shared/api-client/error/index.js'
 import { natalChartCompatibilitiesRepository } from '#root/data/repositories/natal-chart-compatibilities-repository/natal-chart-compatibilities-repository.js'
 
-export class NatalChartCompatibilitiesService {
+export class CompatibilitiesService {
   constructor(
     private readonly natalChartCompatibilitiesRepository: NatalChartCompatibilitiesRepository,
     private readonly logger: Logger,
@@ -22,25 +22,28 @@ export class NatalChartCompatibilitiesService {
     dto: NatalChartCompatibilitiesRepositoryDTO.CreateCompatibilityUserGuestRequestDTO,
     isOpen = false,
   ): Promise<void> {
-    const fetchingMessage = await ctx.reply(ctx.t('fetching'))
+    const fetchingMessage = await ctx.reply(ctx.t('fetching'), { reply_markup: { remove_keyboard: true } })
 
     const [compatibilityError, compatibility] = await safeAsync(
       this.natalChartCompatibilitiesRepository.createForUserWithGuest(dto),
     )
 
     if (compatibilityError && !this.isQuotaLimitError(compatibilityError)) {
-      await fetchingMessage.editText(ctx.t('errors-something-went-wrong'))
+      await fetchingMessage.delete()
+      await ctx.reply(ctx.t('errors-something-went-wrong'))
       return
     }
 
     if (this.isQuotaLimitError(compatibilityError)) {
       // TODO: возможно лучше выводить ошибку с бэка, с форматированным временем окончания лимита
-      await fetchingMessage.editText(ctx.t('error-quota-limit'))
+      await fetchingMessage.delete()
+      await ctx.reply(ctx.t('error-quota-limit'))
       return
     }
 
     if (!compatibility) {
-      await fetchingMessage.editText(ctx.t('errors-something-went-wrong'))
+      await fetchingMessage.delete()
+      await ctx.reply(ctx.t('error-quota-limit'))
       return
     }
 
@@ -53,11 +56,7 @@ export class NatalChartCompatibilitiesService {
 
     const keyboard = isOpen
       ? undefined
-      : new InlineKeyboard().text(
-          ctx.t('compatibilities-button-unlock-full'),
-          `compatibility:unlock`,
-        )
-
+      : new InlineKeyboard().text(ctx.t('compatibilities-button-unlock-full'), `compatibility:unlock`)
     await ctx.reply(formattedInterpretation, {
       reply_markup: keyboard,
       parse_mode: 'HTML',
@@ -187,13 +186,15 @@ export class NatalChartCompatibilitiesService {
     )
 
     if (error) {
-      await fetchingMessage.editText(ctx.t('errors-something-went-wrong'))
+      await fetchingMessage.delete()
+      await ctx.reply(ctx.t('errors-something-went-wrong'))
       this.logger.error({ err: error })
       return
     }
 
     if (!compatibility) {
-      await fetchingMessage.editText(ctx.t('errors-something-went-wrong'))
+      await fetchingMessage.delete()
+      await ctx.reply(ctx.t('errors-something-went-wrong'))
       return
     }
 
@@ -206,11 +207,7 @@ export class NatalChartCompatibilitiesService {
 
     const keyboard = isOpen
       ? undefined
-      : new InlineKeyboard().text(
-          ctx.t('compatibilities-button-unlock-full'),
-          `compatibility:unlock`,
-        )
-
+      : new InlineKeyboard().text(ctx.t('compatibilities-button-unlock-full'), `compatibility:unlock`)
     await fetchingMessage.editText(formattedInterpretation, {
       reply_markup: keyboard,
       parse_mode: 'HTML',
@@ -218,6 +215,6 @@ export class NatalChartCompatibilitiesService {
   }
 }
 
-export function createNatalChartCompatibilitiesService(): NatalChartCompatibilitiesService {
-  return new NatalChartCompatibilitiesService(natalChartCompatibilitiesRepository, logger)
+export function createCompatibilitiesService(): CompatibilitiesService {
+  return new CompatibilitiesService(natalChartCompatibilitiesRepository, logger)
 }
