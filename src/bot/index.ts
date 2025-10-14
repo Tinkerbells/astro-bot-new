@@ -33,11 +33,12 @@ import type { UserService } from './services/user-service/index.js'
 import type { CityService } from './services/city-service/city-service.js'
 import type { AscendantsService } from './services/ascendants-service/index.js'
 import type { NatalChartsService } from './services/natal-charts-service/index.js'
-import type { NatalChartCompatibilitiesService } from './services/natal-chart-compatibilities-service/index.js'
+import type { CompatibilitiesService } from './services/natal-chart-compatibilities-service/index.js'
 
 import { profileMenu } from './shared/menus/index.js'
 import { safeReply } from './shared/helpers/safe-reply.js'
 import { OnboardingStatus } from './shared/types/onboarding.types.js'
+import { createMenuManager } from './shared/services/menu-manager.js'
 import { safeReplyMarkdown } from './shared/helpers/safe-reply-markdown.js'
 
 type Dependencies = {
@@ -47,7 +48,7 @@ type Dependencies = {
   cityService: CityService
   natalChartsService: NatalChartsService
   ascendantsService: AscendantsService
-  natalChartCompatibilitiesService: NatalChartCompatibilitiesService
+  compatibilitiesService: CompatibilitiesService
 }
 
 function getUserSessionKey(ctx: Omit<Context, 'session'>) {
@@ -68,7 +69,7 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
     cityService,
     natalChartsService,
     ascendantsService,
-    natalChartCompatibilitiesService,
+    compatibilitiesService,
   } = dependencies
 
   const bot = new TelegramBot<Context>(token, botConfig)
@@ -78,7 +79,8 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
     ctx.userService = userService
     ctx.natalChartsService = natalChartsService
     ctx.ascendantsService = ascendantsService
-    ctx.natalChartCompatibilitiesService = natalChartCompatibilitiesService
+    ctx.compatibilitiesService = compatibilitiesService
+    ctx.menuManager = createMenuManager(ctx)
     ctx.cityService = cityService
     ctx.logger = logger.child({
       update_id: ctx.update.update_id,
@@ -151,7 +153,8 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
         ctx.userService = userService
         ctx.natalChartsService = natalChartsService
         ctx.ascendantsService = ascendantsService
-        ctx.natalChartCompatibilitiesService = natalChartCompatibilitiesService
+        ctx.menuManager = createMenuManager(ctx)
+        ctx.compatibilitiesService = compatibilitiesService
         ctx.cityService = cityService
         ctx.logger = logger.child({
           update_id: ctx.update.update_id,

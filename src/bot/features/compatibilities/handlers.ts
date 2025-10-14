@@ -16,7 +16,7 @@ feature.command('compatibility', logHandle('command-compatibility'), async (ctx)
 })
 
 feature.callbackQuery('compatibility:unlock', logHandle('callback-compatibility-unlock'), async (ctx) => {
-  await ctx.natalChartCompatibilitiesService.unlockFullCompatibility(ctx)
+  await ctx.compatibilitiesService.unlockFullCompatibility(ctx)
 })
 
 export { composer as compatibilitiesFeature }
