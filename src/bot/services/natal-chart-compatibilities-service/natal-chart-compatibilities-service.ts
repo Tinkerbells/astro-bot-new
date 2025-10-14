@@ -7,8 +7,10 @@ import type { NatalChartCompatibilitiesRepository } from '#root/data/repositorie
 
 import { logger } from '#root/shared/logger.js'
 import { safeAsync } from '#root/shared/index.js'
+import { MenuId } from '#root/bot/shared/menus/menu-ids.js'
 import { FORBIDDEN_ERROR_INFO } from '#root/shared/http/index.js'
 import { ApiDataError } from '#root/shared/api-client/error/index.js'
+import { navigateToMenuScreen } from '#root/bot/shared/helpers/menus.js'
 import { natalChartCompatibilitiesRepository } from '#root/data/repositories/natal-chart-compatibilities-repository/natal-chart-compatibilities-repository.js'
 
 export class CompatibilitiesService {
@@ -47,6 +49,8 @@ export class CompatibilitiesService {
       return
     }
 
+    await fetchingMessage.delete()
+
     // Сохраняем interpretation в session для последующего открытия
     if (!isOpen) {
       ctx.session.lastCompatibilityInterpretation = compatibility.interpretation
@@ -54,13 +58,24 @@ export class CompatibilitiesService {
 
     const formattedInterpretation = this.formatInterpretation(ctx, compatibility.interpretation, isOpen)
 
-    const keyboard = isOpen
-      ? undefined
-      : new InlineKeyboard().text(ctx.t('compatibilities-button-unlock-full'), `compatibility:unlock`)
-    await ctx.reply(formattedInterpretation, {
-      reply_markup: keyboard,
-      parse_mode: 'HTML',
+    // Переходим на экран с интерпретацией совместимости
+    const navigated = await navigateToMenuScreen(ctx, MenuId.Profile, {
+      textKey: 'compatibility-interpretation-text',
+      textParams: { interpretation: formattedInterpretation },
+      menuId: MenuId.Compatibilities,
+      data: { view: 'user-guest-compatibility', isOpen },
     })
+
+    // Если навигация не удалась (нет активного меню), отправляем как обычное сообщение
+    if (!navigated) {
+      const keyboard = isOpen
+        ? undefined
+        : new InlineKeyboard().text(ctx.t('compatibilities-button-unlock-full'), `compatibility:unlock`)
+      await ctx.reply(formattedInterpretation, {
+        reply_markup: keyboard,
+        parse_mode: 'HTML',
+      })
+    }
   }
 
   private formatInterpretation(
@@ -198,6 +213,8 @@ export class CompatibilitiesService {
       return
     }
 
+    await fetchingMessage.delete()
+
     // Сохраняем interpretation в session для последующего открытия
     if (!isOpen) {
       ctx.session.lastCompatibilityInterpretation = compatibility.interpretation
@@ -205,13 +222,24 @@ export class CompatibilitiesService {
 
     const formattedInterpretation = this.formatInterpretation(ctx, compatibility.interpretation, isOpen)
 
-    const keyboard = isOpen
-      ? undefined
-      : new InlineKeyboard().text(ctx.t('compatibilities-button-unlock-full'), `compatibility:unlock`)
-    await fetchingMessage.editText(formattedInterpretation, {
-      reply_markup: keyboard,
-      parse_mode: 'HTML',
+    // Переходим на экран с интерпретацией совместимости
+    const navigated = await navigateToMenuScreen(ctx, MenuId.Profile, {
+      textKey: 'compatibility-interpretation-text',
+      textParams: { interpretation: formattedInterpretation },
+      menuId: MenuId.Compatibilities,
+      data: { view: 'compatibility-by-id', compatibilityId: id, isOpen },
     })
+
+    // Если навигация не удалась (нет активного меню), отправляем как обычное сообщение
+    if (!navigated) {
+      const keyboard = isOpen
+        ? undefined
+        : new InlineKeyboard().text(ctx.t('compatibilities-button-unlock-full'), `compatibility:unlock`)
+      await ctx.reply(formattedInterpretation, {
+        reply_markup: keyboard,
+        parse_mode: 'HTML',
+      })
+    }
   }
 }
 

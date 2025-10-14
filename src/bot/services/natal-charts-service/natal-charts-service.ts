@@ -6,8 +6,10 @@ import type { NatalChartsRepository } from '#root/data/repositories/natal-charts
 
 import { logger } from '#root/shared/logger.js'
 import { safeAsync } from '#root/shared/index.js'
+import { MenuId } from '#root/bot/shared/menus/menu-ids.js'
 import { ApiDataError } from '#root/shared/api-client/error/index.js'
 import { createProfileMessage } from '#root/bot/shared/menus/index.js'
+import { navigateToMenuScreen } from '#root/bot/shared/helpers/menus.js'
 import { FORBIDDEN_ERROR_INFO, NOT_FOUND_ERROR_INFO } from '#root/shared/http/index.js'
 import { natalChartsRepository } from '#root/data/repositories/natal-charts-repository/natal-charts-repository.js'
 
@@ -52,7 +54,21 @@ export class NatalChartsService {
     }
 
     if (userNatalChart) {
-      await ctx.safeReplyMarkdown(userNatalChart.interpretation)
+      await fetchingMessage.delete()
+
+      // Переходим на экран с интерпретацией натальной карты
+      const navigated = await navigateToMenuScreen(ctx, MenuId.Profile, {
+        textKey: 'natal-chart-interpretation-text',
+        textParams: { interpretation: userNatalChart.interpretation },
+        menuId: MenuId.NatalCharts,
+        data: { view: 'user-natal-chart' },
+      })
+
+      // Если навигация не удалась (нет активного меню), отправляем как обычное сообщение
+      if (!navigated) {
+        await ctx.safeReplyMarkdown(userNatalChart.interpretation)
+      }
+
       return
     }
 
@@ -77,9 +93,21 @@ export class NatalChartsService {
       return
     }
 
-    await ctx.safeReplyMarkdown(generatedUserNatalChart.interpretation)
+    await fetchingMessage.delete()
 
-    await createProfileMessage(ctx).send()
+    // Переходим на экран с интерпретацией натальной карты
+    const navigated = await navigateToMenuScreen(ctx, MenuId.Profile, {
+      textKey: 'natal-chart-interpretation-text',
+      textParams: { interpretation: generatedUserNatalChart.interpretation },
+      menuId: MenuId.NatalCharts,
+      data: { view: 'user-natal-chart' },
+    })
+
+    // Если навигация не удалась (нет активного меню), отправляем как обычное сообщение
+    if (!navigated) {
+      await ctx.safeReplyMarkdown(generatedUserNatalChart.interpretation)
+      await createProfileMessage(ctx).send()
+    }
   }
 
   // TODO: полностью неправильно, нужно отдельно брать информацию про guest пользователя, а не исползовать ctx.session.user
@@ -107,7 +135,20 @@ export class NatalChartsService {
       return
     }
 
-    await ctx.safeReplyMarkdown(guestNatalChart.interpretation, { reply_markup: { remove_keyboard: true } })
+    await fetchingMessage.delete()
+
+    // Переходим на экран с интерпретацией натальной карты гостя
+    const navigated = await navigateToMenuScreen(ctx, MenuId.Profile, {
+      textKey: 'natal-chart-interpretation-text',
+      textParams: { interpretation: guestNatalChart.interpretation },
+      menuId: MenuId.NatalCharts,
+      data: { view: 'guest-natal-chart' },
+    })
+
+    // Если навигация не удалась (нет активного меню), отправляем как обычное сообщение
+    if (!navigated) {
+      await ctx.safeReplyMarkdown(guestNatalChart.interpretation, { reply_markup: { remove_keyboard: true } })
+    }
   }
 
   private isNotFoundApiError(error: unknown): boolean {
