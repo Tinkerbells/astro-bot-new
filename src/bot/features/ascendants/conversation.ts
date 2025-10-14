@@ -47,15 +47,13 @@ export async function ascendantsGuestConversation(
     })
   }
 
-  const handleCancel = async () => {
-    await conversation.external(async (externalCtx) => {
-      await ctx.menuManager.replyWithConversationMenu({
-        conversationCtx: ctx,
-        externalCtx,
-        menuKey: MenuId.Profile,
-        textKey: PROFILE_MENU_TEXT_KEY,
-        replyMarkup: menu!,
-      })
+  const handleCancel = async (externalCtx: Context) => {
+    await ctx.menuManager.replyWithConversationMenu({
+      conversationCtx: ctx,
+      externalCtx,
+      menuKey: MenuId.Profile,
+      textKey: PROFILE_MENU_TEXT_KEY,
+      replyMarkup: menu!,
     })
   }
 
