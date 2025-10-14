@@ -9,6 +9,12 @@ import { parseBirthDateInput } from '#root/shared/utils/astro/index.js'
 import type { FormStepFactory } from '../form-step.js'
 
 import { formStep } from '../form-step.js'
+import { CancelPlugin } from '../plugins/cancel.js'
+
+type BirthDateStepOptions = {
+  conversationId: string
+  onCancel?: (ctx: Context) => Promise<void> | void
+}
 
 class BirthDate {
   @IsNotEmpty({ message: 'Дата рождения обязательна' })
@@ -24,9 +30,16 @@ async function validateBirthDate(value: string): Promise<void> {
   await validateOrReject(instance)
 }
 
-function createBirthDateStep(): FormStepFactory<Context, string, string | null> {
+function createBirthDateStep(options: BirthDateStepOptions): FormStepFactory<Context, string, string | null> {
   return formStep<Context>()({
     stepId: 'birthDate',
+    plugins: [
+      new CancelPlugin<Context>({
+        callbackData: 'cancel_birth_date',
+        conversationId: options.conversationId,
+        onCancel: options.onCancel,
+      }),
+    ],
 
     async validate(input) {
       if (!input)
@@ -35,11 +48,19 @@ function createBirthDateStep(): FormStepFactory<Context, string, string | null> 
       await validateBirthDate(input)
     },
 
-    async prompt({ ctx }) {
-      await ctx.reply(ctx.t('astro-data-birth-date'))
+    async prompt({ ctx, plugins }) {
+      await ctx.reply(ctx.t('astro-data-birth-date'), {
+        reply_markup: plugins.get('cancel').createKeyboard(),
+      })
     },
 
-    async build({ form, validate, prompt }) {
+    async build({ ctx, form, validate, prompt, plugins }) {
+      const cancelPlugin = plugins.get('cancel')
+      cancelPlugin.setButton(ctx.t('cancel'))
+      if (options.onCancel) {
+        cancelPlugin.setOnCancel(options.onCancel)
+      }
+
       await prompt()
 
       const birthDate = await form.build<string | null>({
@@ -62,7 +83,9 @@ function createBirthDateStep(): FormStepFactory<Context, string, string | null> 
           }
         },
         otherwise: async (ctx: Context) => {
-          await ctx.reply(ctx.t('astro-data-birth-date-invalid'))
+          await ctx.reply(ctx.t('astro-data-birth-date-invalid'), {
+            reply_markup: cancelPlugin.createKeyboard(),
+          })
         },
       })
 
@@ -71,4 +94,4 @@ function createBirthDateStep(): FormStepFactory<Context, string, string | null> 
   })
 }
 
-export const birthDateStep = createBirthDateStep()
+export const birthDateStep = (options: BirthDateStepOptions) => createBirthDateStep(options)

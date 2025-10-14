@@ -12,7 +12,13 @@ import { getTimezoneByCoordinates, isValidTimezone } from '#root/shared/utils/as
 import type { FormStepFactory } from '../form-step.js'
 
 import { formStep } from '../form-step.js'
+import { CancelPlugin } from '../plugins/cancel.js'
 import { AttemptsPlugin } from '../plugins/attempts.js'
+
+type BirthPlaceStepOptions = {
+  conversationId: string
+  onCancel?: (ctx: Context) => Promise<void> | void
+}
 
 /**
  * Создает клавиатуру для запроса геолокации
@@ -31,6 +37,7 @@ export function createLocationRequestKeyboard(
  */
 export function createCitiesInlineKeyboard(
   callbackDataPrefix = 'astro-data:timezone:city',
+  extraKeyboard?: InlineKeyboard,
 ) {
   const keyboard = new InlineKeyboard()
 
@@ -39,6 +46,10 @@ export function createCitiesInlineKeyboard(
     if ((index + 1) % 2 === 0)
       keyboard.row()
   })
+
+  if (extraKeyboard) {
+    keyboard.inline_keyboard.push(...extraKeyboard.inline_keyboard)
+  }
 
   return keyboard
 }
@@ -66,7 +77,7 @@ async function validateBirthPlace(data: BirthPlace): Promise<void> {
   await validateOrReject(instance)
 }
 
-function createBirthPlaceStep(): FormStepFactory<Context, BirthPlace, BirthPlace | null> {
+function createBirthPlaceStep(options: BirthPlaceStepOptions): FormStepFactory<Context, BirthPlace, BirthPlace | null> {
   return formStep<Context>()({
     stepId: 'birthPlace',
     plugins: [
@@ -78,6 +89,11 @@ function createBirthPlaceStep(): FormStepFactory<Context, BirthPlace, BirthPlace
           return { ok: true, value: null }
         },
       }),
+      new CancelPlugin<Context>({
+        callbackData: 'cancel_birth_place',
+        conversationId: options.conversationId,
+        onCancel: options.onCancel,
+      }),
     ],
 
     async validate(input: BirthPlace | null) {
@@ -87,13 +103,22 @@ function createBirthPlaceStep(): FormStepFactory<Context, BirthPlace, BirthPlace
       await validateBirthPlace(input)
     },
 
-    async prompt({ ctx }) {
+    async prompt({ ctx, plugins }) {
       // TODO: создать отдельный ключ в i18n для этого текста
       await ctx.safeReply('Введите его название или используете кнопку геолокации', { reply_markup: createLocationRequestKeyboard(ctx) })
-      await ctx.safeReply('Популярные города', { reply_markup: createCitiesInlineKeyboard() })
+      await ctx.safeReply('Популярные города', {
+        reply_markup: createCitiesInlineKeyboard(
+          'astro-data:timezone:city',
+          plugins.get('cancel').createKeyboard(),
+        ),
+      })
     },
 
-    async build({ form, prompt }) {
+    async build({ ctx, form, prompt, plugins }) {
+      const cancelPlugin = plugins.get('cancel')
+      cancelPlugin.setButton(ctx.t('cancel'))
+      cancelPlugin.setOnCancel(options.onCancel)
+
       await prompt()
 
       const birthPlace = await form.build({
@@ -167,7 +192,12 @@ function createBirthPlaceStep(): FormStepFactory<Context, BirthPlace, BirthPlace
           return { ok: false, error: new Error('City not found') }
         },
         otherwise: async (ctx: Context) => {
-          await ctx.safeReply(ctx.t('astro-data-location-not-found'), { reply_markup: createCitiesInlineKeyboard() })
+          await ctx.safeReply(ctx.t('astro-data-location-not-found'), {
+            reply_markup: createCitiesInlineKeyboard(
+              'astro-data:timezone:city',
+              cancelPlugin.createKeyboard(),
+            ),
+          })
         },
       })
       return birthPlace
@@ -175,4 +205,4 @@ function createBirthPlaceStep(): FormStepFactory<Context, BirthPlace, BirthPlace
   })
 }
 
-export const birthPlaceStep = createBirthPlaceStep()
+export const birthPlaceStep = (options: BirthPlaceStepOptions) => createBirthPlaceStep(options)
