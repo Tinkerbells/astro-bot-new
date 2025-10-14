@@ -13,30 +13,34 @@ import type { UserService } from '#root/bot/services/user-service/index.js'
 import type { NatalChartCompatibilitiesRepositoryDTO } from '#root/data/index.js'
 import type { AscendantsService } from '#root/bot/services/ascendants-service/index.js'
 import type { NatalChartsService } from '#root/bot/services/natal-charts-service/index.js'
-import type { NatalChartCompatibilitiesService } from '#root/bot/services/natal-chart-compatibilities-service/index.js'
+import type { CompatibilitiesService } from '#root/bot/services/natal-chart-compatibilities-service/index.js'
 
 import type { SafeReply } from './shared/helpers/safe-reply.js'
 import type { AttemptsState } from './shared/forms/plugins/attempts.js'
 import type { OnboardingState } from './shared/types/onboarding.types.js'
 import type { CityService } from './services/city-service/city-service.js'
 import type { SafeReplyMarkdown } from './shared/helpers/safe-reply-markdown.js'
+import type { MenuManager, MenuNavigationData } from './shared/services/menu-manager.js'
 
 export type SessionData = {
   user: User
   onboarding: OnboardingState
-  __language_code?: string
-  __formAttempts?: AttemptsState
+  // TODO: посмотреть как лучше можно работать с этим
   lastCompatibilityInterpretation?: NatalChartCompatibilitiesRepositoryDTO.NatalChartCompatibilityInterpretation
   compatibilitiesList?: NatalChartCompatibilitiesRepositoryDTO.NatalChartCompatibilityDTO[]
+  menus?: Record<string, MenuNavigationData>
+  __language_code?: string
+  __formAttempts?: AttemptsState
 }
 
 type ExtendedContextFlavor = {
   logger: Logger
   config: Config
+  menuManager: MenuManager
   userService: UserService
   natalChartsService: NatalChartsService
   ascendantsService: AscendantsService
-  natalChartCompatibilitiesService: NatalChartCompatibilitiesService
+  compatibilitiesService: CompatibilitiesService
   cityService: CityService
   safeReply: SafeReply
   safeReplyMarkdown: SafeReplyMarkdown

@@ -18,13 +18,13 @@ import { cityService } from './bot/services/city-service/index.js'
 import { createUserService } from './bot/services/user-service/index.js'
 import { createAscendantsService } from './bot/services/ascendants-service/index.js'
 import { createNatalChartsService } from './bot/services/natal-charts-service/index.js'
-import { createNatalChartCompatibilitiesService } from './bot/services/natal-chart-compatibilities-service/index.js'
+import { createCompatibilitiesService } from './bot/services/natal-chart-compatibilities-service/index.js'
 
 // Create shared dependencies
 const userService = createUserService()
 const natalChartsService = createNatalChartsService()
 const ascendantsService = createAscendantsService()
-const natalChartCompatibilitiesService = createNatalChartCompatibilitiesService()
+const compatibilitiesService = createCompatibilitiesService()
 
 async function startPolling(config: PollingConfig) {
   const bot = createBot(config.botToken, {
@@ -34,7 +34,7 @@ async function startPolling(config: PollingConfig) {
     cityService,
     natalChartsService,
     ascendantsService,
-    natalChartCompatibilitiesService,
+    compatibilitiesService,
   })
   let runner: undefined | RunnerHandle
 
@@ -72,7 +72,7 @@ async function startWebhook(config: WebhookConfig) {
     cityService,
     natalChartsService,
     ascendantsService,
-    natalChartCompatibilitiesService,
+    compatibilitiesService,
   })
   const server = createServer({
     bot,
