@@ -201,14 +201,6 @@ export class CompatibilitiesService {
     const formattedInterpretation = this.formatInterpretation(ctx, compatibility.interpretation, isOpen)
 
     return formattedInterpretation
-
-    // const keyboard = isOpen
-    //   ? undefined
-    //   : new InlineKeyboard().text(ctx.t('compatibilities-button-unlock-full'), `compatibility:unlock`)
-    // await fetchingMessage.editText(formattedInterpretation, {
-    //   reply_markup: keyboard,
-    //   parse_mode: 'HTML',
-    // })
   }
 }
 
