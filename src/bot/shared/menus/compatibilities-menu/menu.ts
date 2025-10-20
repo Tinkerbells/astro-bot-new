@@ -4,7 +4,6 @@ import type { Context } from '#root/bot/context.js'
 
 import { MenuId } from '../menu-ids.js'
 import { buildCompatibilitiesMenuRange } from './utils/index.js'
-import { registerMenuDefinition } from '../../services/menu-manager.js'
 import { compatibilitiesListMenu } from '../compatibilities-list-menu/index.js'
 
 export function createCompatibilitiesMenu(): Menu<Context> {
@@ -20,7 +19,3 @@ export function createCompatibilitiesMenu(): Menu<Context> {
 }
 
 export const compatibilitiesMenu = createCompatibilitiesMenu()
-
-registerMenuDefinition(MenuId.Compatibilities, {
-  getRootMenu: () => compatibilitiesMenu,
-})

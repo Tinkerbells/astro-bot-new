@@ -4,7 +4,14 @@ import type { Context } from '#root/bot/context.js'
 
 import { MenuId } from '../menu-ids.js'
 import { buildNatalChartsMenuRange } from './utils/index.js'
-import { registerMenuDefinition } from '../../services/menu-manager.js'
+
+// TODO: добавить универсальный i18n key для back
+export const personalNatalChartMenu = new Menu<Context>(MenuId.PersonalNatalChart).back(
+  ctx => ctx.t('natal-charts-menu-back'),
+  async (ctx) => {
+    await ctx.editMessageText(ctx.t('profile-menu-natal-chart'))
+  },
+)
 
 export function createNatalChartsMenu(): Menu<Context> {
   const menu = new Menu<Context>(MenuId.NatalCharts)
@@ -18,6 +25,4 @@ export function createNatalChartsMenu(): Menu<Context> {
 
 export const natalChartsMenu = createNatalChartsMenu()
 
-registerMenuDefinition(MenuId.NatalCharts, {
-  getRootMenu: () => natalChartsMenu,
-})
+natalChartsMenu.register(personalNatalChartMenu)

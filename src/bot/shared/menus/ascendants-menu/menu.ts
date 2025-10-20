@@ -4,7 +4,14 @@ import type { Context } from '#root/bot/context.js'
 
 import { MenuId } from '../menu-ids.js'
 import { buildAscendantsMenuRange } from './utils/index.js'
-import { registerMenuDefinition } from '../../services/menu-manager.js'
+
+// TODO: добавить универсальный i18n key для back
+export const personalAscendantMenu = new Menu<Context>(MenuId.PersonalAscendant).back(
+  ctx => ctx.t('ascendants-menu-back'),
+  async (ctx) => {
+    await ctx.editMessageText(ctx.t('profile-menu-ascendant'))
+  },
+)
 
 export function createAscendantsMenu(): Menu<Context> {
   const menu = new Menu<Context>(MenuId.Ascendants)
@@ -18,6 +25,4 @@ export function createAscendantsMenu(): Menu<Context> {
 
 export const ascendantsMenu = createAscendantsMenu()
 
-registerMenuDefinition(MenuId.Ascendants, {
-  getRootMenu: () => ascendantsMenu,
-})
+ascendantsMenu.register(personalAscendantMenu)

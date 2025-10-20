@@ -1,5 +1,6 @@
 import type { Context } from '#root/bot/context.js'
 
+import { profileMenu } from '../menu.js'
 import { MenuId } from '../../menu-ids.js'
 
 export const PROFILE_MENU_TEXT_KEY = 'profile-menu-title'
@@ -16,16 +17,10 @@ export function createProfileMessage(ctx: Context) {
      * Отправляет сообщение с профилем и меню
      */
     async send() {
-      const menu = ctx.menuManager.getMenuMarkup(MenuId.Profile)
-      if (!menu) {
-        ctx.logger.error({ menuId: MenuId.Profile }, 'Profile menu is not registered')
-        return ctx.safeReply(ctx.t(textKey))
-      }
-
       return ctx.menuManager.replyWithMenu({
         menuKey: MenuId.Profile,
         textKey,
-        replyMarkup: menu,
+        replyMarkup: profileMenu,
       })
     },
 
@@ -40,15 +35,8 @@ export function createProfileMessage(ctx: Context) {
      * Редактирует существующее сообщение
      */
     async edit() {
-      const menu = ctx.menuManager.getMenuMarkup(MenuId.Profile)
-      if (!menu) {
-        ctx.logger.error({ menuId: MenuId.Profile }, 'Profile menu is not registered')
-        await ctx.editMessageText(getFullMessage())
-        return
-      }
-
       await ctx.editMessageText(getFullMessage(), {
-        reply_markup: menu,
+        reply_markup: profileMenu,
       })
     },
 

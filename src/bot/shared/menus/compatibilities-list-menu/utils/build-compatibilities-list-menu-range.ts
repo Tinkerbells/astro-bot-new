@@ -4,8 +4,6 @@ import type { Context } from '#root/bot/context.js'
 
 import { safeAsync } from '#root/shared/index.js'
 
-import { MenuId } from '../../menu-ids.js'
-
 export function buildCompatibilitiesListMenuRange(
   range: MenuRange<Context>,
   ctx: Context,
@@ -38,23 +36,7 @@ export function buildCompatibilitiesListMenuRange(
   range.back(
     ctx => ctx.t('compatibilities-menu-back'),
     async (ctx) => {
-      const menu = ctx.menuManager.getMenuNavigation(MenuId.Profile)
-
-      // Если в стеке есть дополнительные состояния (интерпретация), очищаем стек и обновляем текст
-      if (menu && menu.stack.length > 1) {
-        // Очищаем все состояния кроме начального
-        while (menu.stack.length > 1) {
-          ctx.menuManager.popState(MenuId.Profile)
-        }
-
-        // Обновляем текст на текст parent menu перед возвратом
-        const newText = ctx.menuManager.renderCurrentText(MenuId.Profile)
-        if (newText) {
-          await ctx.api.editMessageText(ctx.chat!.id, menu.messageId, newText)
-        }
-      }
-
-      // В любом случае возвращаемся в parent menu через grammY (обновляет клавиатуру)
+      await ctx.editMessageText(ctx.t('profile-menu-compatibility'))
       await ctx.menu.back()
     },
   )

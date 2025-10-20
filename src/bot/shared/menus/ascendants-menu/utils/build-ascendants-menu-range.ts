@@ -8,21 +8,22 @@ import { canUseAstroFeature } from '#root/bot/shared/helpers/user.js'
 import { ASCENDANTS_GUEST_CONVERSATION } from '#root/bot/features/index.js'
 
 import { MenuId } from '../../menu-ids.js'
+import { createProfileMessage } from '../../profile-menu/utils/create-profile-message.js'
 
 export function buildAscendantsMenuRange(
   range: MenuRange<Context> | ConversationMenuRange<Context>,
 ) {
   range
-    .text(
+    .submenu(
       ctx => ctx.t('ascendants-menu-my-ascendant'),
+      MenuId.PersonalAscendant,
       async (ctx) => {
-        const [error] = await safeAsync(
-          ctx.ascendantsService.replyWithUserAscendant(ctx),
-        )
+        const [error, data] = await safeAsync(ctx.ascendantsService.getUserAscendant(ctx))
         if (error) {
-          ctx.reply('errors-something-went-wrong')
-          ctx.menu.back()
-          ctx.logger.error({ err: error })
+          await ctx.reply(ctx.t('errors-something-went-wrong'))
+        }
+        if (!error && data) {
+          ctx.safeEditMarkdownMessage(data)
         }
       },
     )
@@ -49,24 +50,9 @@ export function buildAscendantsMenuRange(
   range.back(
     ctx => ctx.t('ascendants-menu-back'),
     async (ctx) => {
-      const menu = ctx.menuManager.getMenuNavigation(MenuId.Profile)
-
-      // Если в стеке есть дополнительные состояния (интерпретация), очищаем стек и обновляем текст
-      if (menu && menu.stack.length > 1) {
-        // Очищаем все состояния кроме начального
-        while (menu.stack.length > 1) {
-          ctx.menuManager.popState(MenuId.Profile)
-        }
-
-        // Обновляем текст на текст parent menu перед возвратом
-        const newText = ctx.menuManager.renderCurrentText(MenuId.Profile)
-        if (newText) {
-          await ctx.api.editMessageText(ctx.chat!.id, menu.messageId, newText)
-        }
-      }
-
-      // В любом случае возвращаемся в parent menu через grammY (обновляет клавиатуру)
-      await ctx.menu.back()
+      const messageText = createProfileMessage(ctx).getText()
+      await ctx.editMessageText(messageText)
+      ctx.menu.back()
     },
   )
 }
