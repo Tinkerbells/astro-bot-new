@@ -35,18 +35,6 @@ export function buildCompatibilitiesMenuRange(
     .submenu(
       ctx => ctx.t('compatibilities-menu-my-compatibilities'),
       MenuId.CompatibilitiesList,
-      async (ctx) => {
-        const [error] = await safeAsync(
-          ctx.compatibilitiesService.loadUserCompatibilities(ctx),
-        )
-        if (error) {
-          ctx.reply('errors-something-went-wrong')
-          ctx.logger.error({ err: error })
-        }
-        else {
-          await ctx.editMessageText(ctx.t('profile-menu-compatibility'))
-        }
-      },
     )
     .row()
 

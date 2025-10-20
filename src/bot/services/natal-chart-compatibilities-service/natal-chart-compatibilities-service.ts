@@ -157,7 +157,7 @@ export class CompatibilitiesService {
     }
   }
 
-  public async loadUserCompatibilities(ctx: Context): Promise<void> {
+  public async getUserCompatibilities(ctx: Context) {
     const user = ctx.session.user
 
     const [error, result] = await safeAsync(
@@ -170,16 +170,14 @@ export class CompatibilitiesService {
     }
 
     if (!result || result.data.length === 0) {
-      ctx.session.compatibilitiesList = []
-      return
+      return null
     }
 
-    // Сохраняем список совместимостей в session для menu
-    ctx.session.compatibilitiesList = result.data
+    return result.data
   }
 
-  public async replyWithCompatibilityById(ctx: Context, id: string, isOpen = false): Promise<void> {
-    const fetchingMessage = await ctx.reply(ctx.t('fetching'))
+  public async getCompatibilityById(ctx: Context, id: string, isOpen = false) {
+    const fetchingMessage = await ctx.reply(ctx.t('fetching'), { reply_markup: { remove_keyboard: true } })
 
     const [error, compatibility] = await safeAsync(
       this.natalChartCompatibilitiesRepository.findById(id),
@@ -189,29 +187,28 @@ export class CompatibilitiesService {
       await fetchingMessage.delete()
       await ctx.reply(ctx.t('errors-something-went-wrong'))
       this.logger.error({ err: error })
-      return
+      return null
     }
 
     if (!compatibility) {
       await fetchingMessage.delete()
       await ctx.reply(ctx.t('errors-something-went-wrong'))
-      return
+      return null
     }
 
-    // Сохраняем interpretation в session для последующего открытия
-    if (!isOpen) {
-      ctx.session.lastCompatibilityInterpretation = compatibility.interpretation
-    }
+    await fetchingMessage.delete()
 
     const formattedInterpretation = this.formatInterpretation(ctx, compatibility.interpretation, isOpen)
 
-    const keyboard = isOpen
-      ? undefined
-      : new InlineKeyboard().text(ctx.t('compatibilities-button-unlock-full'), `compatibility:unlock`)
-    await fetchingMessage.editText(formattedInterpretation, {
-      reply_markup: keyboard,
-      parse_mode: 'HTML',
-    })
+    return formattedInterpretation
+
+    // const keyboard = isOpen
+    //   ? undefined
+    //   : new InlineKeyboard().text(ctx.t('compatibilities-button-unlock-full'), `compatibility:unlock`)
+    // await fetchingMessage.editText(formattedInterpretation, {
+    //   reply_markup: keyboard,
+    //   parse_mode: 'HTML',
+    // })
   }
 }
 

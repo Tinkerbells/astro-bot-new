@@ -12,5 +12,6 @@ export enum MenuId {
   NatalCharts = 'natal-charts-menu',
   PersonalNatalChart = 'personal-natal-chart',
   Compatibilities = 'compatibilities-menu',
+  Compatibility = 'compatibility-menu',
   CompatibilitiesList = 'compatibilities-list-menu',
 }
