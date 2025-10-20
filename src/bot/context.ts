@@ -19,8 +19,8 @@ import type { SafeReply } from './shared/helpers/safe-reply.js'
 import type { AttemptsState } from './shared/forms/plugins/attempts.js'
 import type { OnboardingState } from './shared/types/onboarding.types.js'
 import type { CityService } from './services/city-service/city-service.js'
-import type { SafeReplyMarkdown } from './shared/helpers/safe-reply-markdown.js'
 import type { MenuManager, MenuNavigationData } from './shared/services/menu-manager.js'
+import type { SafeEditMarkdownMessage, SafeReplyMarkdown } from './shared/helpers/safe-reply-markdown.js'
 
 export type SessionData = {
   user: User
@@ -44,6 +44,7 @@ type ExtendedContextFlavor = {
   cityService: CityService
   safeReply: SafeReply
   safeReplyMarkdown: SafeReplyMarkdown
+  safeEditMarkdownMessage: SafeEditMarkdownMessage
 }
 
 // Внешний контекст (используется в middleware)
