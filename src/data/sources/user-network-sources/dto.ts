@@ -13,6 +13,10 @@ export class RegisterUserDTO {
 
   @IsOptional()
   @IsString()
+  socialName?: string
+
+  @IsOptional()
+  @IsString()
   firstName?: string
 
   @IsOptional()

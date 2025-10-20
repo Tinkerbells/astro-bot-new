@@ -34,6 +34,11 @@ export class User {
   @Expose()
   @IsOptional()
   @IsString()
+  socialName?: string
+
+  @Expose()
+  @IsOptional()
+  @IsString()
   firstName?: string
 
   @Expose()

@@ -21,6 +21,7 @@ export function createUserSessionMiddleware(userService: UserService) {
       try {
         const user = await userService.getOrCreateUser({
           socialId: String(telegramUser.id),
+          socialName: telegramUser.username,
           firstName: telegramUser.first_name,
           lastName: telegramUser.last_name,
         })
