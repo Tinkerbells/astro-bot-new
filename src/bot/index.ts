@@ -39,7 +39,7 @@ import { profileMenu } from './shared/menus/index.js'
 import { safeReply } from './shared/helpers/safe-reply.js'
 import { OnboardingStatus } from './shared/types/onboarding.types.js'
 import { createMenuManager } from './shared/services/menu-manager.js'
-import { safeReplyMarkdown } from './shared/helpers/safe-reply-markdown.js'
+import { safeEditMarkdownMessage, safeReplyMarkdown } from './shared/helpers/safe-reply-markdown.js'
 
 type Dependencies = {
   config: Config
@@ -87,6 +87,7 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
     })
     ctx.safeReply = safeReply(ctx)
     ctx.safeReplyMarkdown = safeReplyMarkdown(ctx)
+    ctx.safeEditMarkdownMessage = safeEditMarkdownMessage(ctx)
 
     await next()
   })
@@ -161,6 +162,7 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
         })
         ctx.safeReply = safeReply(ctx)
         ctx.safeReplyMarkdown = safeReplyMarkdown(ctx)
+        ctx.safeEditMarkdownMessage = safeEditMarkdownMessage(ctx)
         await next()
       },
       i18n.middleware(),

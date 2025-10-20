@@ -3,7 +3,7 @@ import { Composer } from 'grammy'
 import type { Context } from '#root/bot/context.js'
 
 import { logHandle } from '#root/bot/shared/helpers/logging.js'
-import { compatibilitiesMenu } from '#root/bot/shared/menus/index.js'
+import { compatibilitiesMenu } from '#root/bot/shared/menus/compatibilities-menu/menu.js'
 
 export const composer = new Composer<Context>()
 

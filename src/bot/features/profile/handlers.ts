@@ -2,7 +2,7 @@ import { Composer } from 'grammy'
 
 import type { Context } from '#root/bot/context.js'
 
-import { createProfileMessage } from '#root/bot/shared/menus/index.js'
+import { createProfileMessage } from '#root/bot/shared/menus/profile-menu/utils/create-profile-message.js'
 
 export const composer = new Composer<Context>()
 

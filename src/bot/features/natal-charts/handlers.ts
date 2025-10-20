@@ -3,7 +3,7 @@ import { Composer } from 'grammy'
 import type { Context } from '#root/bot/context.js'
 
 import { logHandle } from '#root/bot/shared/helpers/logging.js'
-import { natalChartsMenu } from '#root/bot/shared/menus/index.js'
+import { natalChartsMenu } from '#root/bot/shared/menus/natal-charts-menu/menu.js'
 
 export const composer = new Composer<Context>()
 
