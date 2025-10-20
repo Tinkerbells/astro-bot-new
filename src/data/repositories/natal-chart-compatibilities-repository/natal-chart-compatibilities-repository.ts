@@ -12,6 +12,11 @@ export class NatalChartCompatibilitiesRepository {
     return data.data
   }
 
+  public async createBySocialName(dto: NatalChartCompatibilitiesRepositoryDTO.CreateCompatibilityBySocialNameRequestDTO): Promise<NatalChartCompatibilitiesRepositoryDTO.NatalChartCompatibilityDTO> {
+    const data = await this.natalChartCompatibilitiesNetworkSources.createBySocialName(dto)
+    return data.data
+  }
+
   public async findAllByUserId(userId: number, query?: NatalChartCompatibilitiesRepositoryDTO.FindAllCompatibilitiesQueryDTO): Promise<NatalChartCompatibilitiesRepositoryDTO.InfinityPaginationResultDTO<NatalChartCompatibilitiesRepositoryDTO.NatalChartCompatibilityDTO>> {
     const data = await this.natalChartCompatibilitiesNetworkSources.findAllByUserId(userId, query)
     return data.data

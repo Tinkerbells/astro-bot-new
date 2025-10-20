@@ -63,6 +63,51 @@ export class CompatibilitiesService {
     })
   }
 
+  public async replyWithCompatibilityBySocialName(
+    ctx: Context,
+    dto: NatalChartCompatibilitiesRepositoryDTO.CreateCompatibilityBySocialNameRequestDTO,
+    isOpen = false,
+  ): Promise<void> {
+    const fetchingMessage = await ctx.reply(ctx.t('fetching'), { reply_markup: { remove_keyboard: true } })
+
+    const [compatibilityError, compatibility] = await safeAsync(
+      this.natalChartCompatibilitiesRepository.createBySocialName(dto),
+    )
+
+    if (compatibilityError && !this.isQuotaLimitError(compatibilityError)) {
+      await fetchingMessage.delete()
+      await ctx.reply(ctx.t('errors-something-went-wrong'))
+      return
+    }
+
+    if (this.isQuotaLimitError(compatibilityError)) {
+      await fetchingMessage.delete()
+      await ctx.reply(ctx.t('error-quota-limit'))
+      return
+    }
+
+    if (!compatibility) {
+      await fetchingMessage.delete()
+      await ctx.reply(ctx.t('error-quota-limit'))
+      return
+    }
+
+    // Сохраняем interpretation в session для последующего открытия
+    if (!isOpen) {
+      ctx.session.lastCompatibilityInterpretation = compatibility.interpretation
+    }
+
+    const formattedInterpretation = this.formatInterpretation(ctx, compatibility.interpretation, isOpen)
+
+    const keyboard = isOpen
+      ? undefined
+      : new InlineKeyboard().text(ctx.t('compatibilities-button-unlock-full'), `compatibility:unlock`)
+    await ctx.reply(formattedInterpretation, {
+      reply_markup: keyboard,
+      parse_mode: 'HTML',
+    })
+  }
+
   private formatInterpretation(
     ctx: Context,
     interpretation: NatalChartCompatibilitiesRepositoryDTO.NatalChartCompatibilityInterpretation,

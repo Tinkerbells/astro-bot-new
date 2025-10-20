@@ -70,6 +70,19 @@ export class CreateCompatibilityUserGuestDTO {
   houseSystem?: string
 }
 
+export class CreateCompatibilityBySocialNameDTO {
+  @IsString()
+  partnerSocialName: string
+
+  @IsString()
+  @MaxLength(120)
+  label: string
+
+  @IsOptional()
+  @IsString()
+  houseSystem?: string
+}
+
 export class NatalChartCompatibilityDTO {
   @IsString()
   id: string
@@ -102,6 +115,15 @@ export class CreateCompatibilityUserGuestRequestDTO {
   @ValidateNested()
   @Type(() => CreateCompatibilityUserGuestDTO)
   body: CreateCompatibilityUserGuestDTO
+}
+
+export class CreateCompatibilityBySocialNameRequestDTO {
+  @IsInt()
+  userId: number
+
+  @ValidateNested()
+  @Type(() => CreateCompatibilityBySocialNameDTO)
+  body: CreateCompatibilityBySocialNameDTO
 }
 
 export class FindAllCompatibilitiesQueryDTO {

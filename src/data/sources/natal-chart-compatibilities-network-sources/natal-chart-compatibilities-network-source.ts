@@ -11,6 +11,14 @@ export const natalChartCompatibilitiesNetworkSources = {
     )
   },
 
+  createBySocialName: (dto: NatalChartCompatibilitiesNetworkSourcesDTO.CreateCompatibilityBySocialNameRequestDTO) => {
+    const { userId, body } = dto
+    return apiHttpClient.post<NatalChartCompatibilitiesNetworkSourcesDTO.NatalChartCompatibilityDTO>(
+      `/v1/natal-chart-compatibilities/user/${userId}/by-social-name`,
+      body,
+    )
+  },
+
   findAllByUserId: (userId: number, query?: NatalChartCompatibilitiesNetworkSourcesDTO.FindAllCompatibilitiesQueryDTO) => {
     const params = new URLSearchParams()
     if (query?.page) {
