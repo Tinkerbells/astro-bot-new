@@ -6,6 +6,7 @@ import type { FormStepFactory } from '#root/bot/shared/forms/form-step.js'
 import type { FormValidateResult } from '#root/bot/shared/helpers/form.js'
 
 import { formStep } from '#root/bot/shared/forms/form-step.js'
+import { CancelPlugin } from '#root/bot/shared/forms/plugins/cancel.js'
 
 class CompatibilityLabel {
   @IsNotEmpty()
@@ -18,9 +19,19 @@ async function validateLabel(value: string): Promise<void> {
   await validateOrReject(instance)
 }
 
-function createCompatibilityLabelStep(): FormStepFactory<Context, string, string | null> {
+type CompatibilityLabelStepOptions = {
+  conversationId: string
+}
+
+function compatibilityLabelStep(options: CompatibilityLabelStepOptions): FormStepFactory<Context, string, string | null> {
   return formStep<Context>()({
     stepId: 'compatibilityLabel',
+    plugins: [
+      new CancelPlugin<Context>({
+        callbackData: 'cancel_compatibility_label',
+        conversationId: options.conversationId,
+      }),
+    ],
 
     async validate(input) {
       if (!input)
@@ -29,12 +40,14 @@ function createCompatibilityLabelStep(): FormStepFactory<Context, string, string
       await validateLabel(input)
     },
 
-    async prompt({ ctx }) {
+    async prompt({ ctx, plugins }) {
       // TODO: добавить i18n
-      await ctx.reply('Введите имя партнера')
+      await ctx.reply('Введите имя партнера', { reply_markup: plugins.get('cancel').createKeyboard() })
     },
 
-    async build({ form, validate, prompt }) {
+    async build({ ctx, form, validate, prompt, plugins }) {
+      const cancelPlugin = plugins.get('cancel')
+      cancelPlugin.setButton(ctx.t('cancel'))
       await prompt()
 
       const label = await form.build<string | null>({
@@ -53,7 +66,7 @@ function createCompatibilityLabelStep(): FormStepFactory<Context, string, string
           }
         },
         otherwise: async (ctx: Context) => {
-          await ctx.reply(ctx.t('astro-data-birth-date-invalid'))
+          await ctx.reply(ctx.t('astro-data-birth-date-invalid'), { reply_markup: plugins.get('cancel').createKeyboard() })
         },
       })
 
@@ -62,4 +75,4 @@ function createCompatibilityLabelStep(): FormStepFactory<Context, string, string
   })
 }
 
-export const compatibilityLabelStep = createCompatibilityLabelStep()
+export const createCompatibilityLabelStep = (options: CompatibilityLabelStepOptions) => compatibilityLabelStep(options)

@@ -5,10 +5,7 @@ import type { AscendantsRepository } from '#root/data/repositories/ascendants-re
 
 import { logger } from '#root/shared/logger.js'
 import { safeAsync } from '#root/shared/index.js'
-import { MenuId } from '#root/bot/shared/menus/menu-ids.js'
 import { ApiDataError } from '#root/shared/api-client/error/index.js'
-import { createProfileMessage } from '#root/bot/shared/menus/index.js'
-import { navigateToMenuScreen } from '#root/bot/shared/helpers/menus.js'
 import { FORBIDDEN_ERROR_INFO, NOT_FOUND_ERROR_INFO } from '#root/shared/http/index.js'
 import { ascendantsRepository } from '#root/data/repositories/ascendants-repository/ascendants-repository.js'
 
@@ -18,7 +15,7 @@ export class AscendantsService {
     private readonly logger: Logger,
   ) { }
 
-  public async replyWithUserAscendant(
+  public async getUserAscendant(
     ctx: Context,
   ) {
     const user = ctx.session.user
@@ -37,21 +34,7 @@ export class AscendantsService {
 
     if (userAscendant) {
       await fetchingMessage.delete()
-
-      // Переходим на экран с интерпретацией асцендента
-      const navigated = await navigateToMenuScreen(ctx, MenuId.Profile, {
-        textKey: 'ascendants-interpretation-text',
-        textParams: { interpretation: userAscendant.interpretation },
-        menuId: MenuId.Ascendants,
-        data: { view: 'user-ascendant' },
-      })
-
-      // Если навигация не удалась (нет активного меню), отправляем как обычное сообщение
-      if (!navigated) {
-        await ctx.safeReplyMarkdown(userAscendant.interpretation)
-      }
-
-      return
+      return userAscendant.interpretation
     }
 
     const [generateForUserError, generatedUserAscendant] = await safeAsync(this.ascendantsRepository.generateForUser({ userId: Number(user.id) }))
@@ -66,18 +49,16 @@ export class AscendantsService {
       // TODO: возможно лучше выводить ошибку с бэка, с форматированным временем окончания лимита
       await fetchingMessage.delete()
       await ctx.reply(ctx.t('error-quota-limit'))
-      return
+      return null
     }
 
     if (!generatedUserAscendant) {
       await fetchingMessage.delete()
       await ctx.reply(ctx.t('errors-something-went-wrong'))
-      return
+      return null
     }
 
-    await ctx.safeReplyMarkdown(generatedUserAscendant.interpretation)
-
-    await createProfileMessage(ctx).send()
+    return generatedUserAscendant.interpretation
   }
 
   // TODO: полностью неправильно, нужно отдельно брать информацию про guest пользователя, а не исползовать ctx.session.user

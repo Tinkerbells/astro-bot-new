@@ -7,7 +7,6 @@ import type { NatalChartsRepository } from '#root/data/repositories/natal-charts
 import { logger } from '#root/shared/logger.js'
 import { safeAsync } from '#root/shared/index.js'
 import { ApiDataError } from '#root/shared/api-client/error/index.js'
-import { createProfileMessage } from '#root/bot/shared/menus/index.js'
 import { FORBIDDEN_ERROR_INFO, NOT_FOUND_ERROR_INFO } from '#root/shared/http/index.js'
 import { natalChartsRepository } from '#root/data/repositories/natal-charts-repository/natal-charts-repository.js'
 
@@ -31,29 +30,29 @@ export class NatalChartsService {
     )
   }
 
-  public async replyWithUserNatalChart(
+  public async getUserNatalChart(
     ctx: Context,
   ) {
     const user = ctx.session.user
 
     if (!this.canGenerateUserChart(user)) {
       await ctx.reply(ctx.t('natal-charts-user-missing-data'))
-      return
+      return null
     }
 
-    const fetchingMessage = await ctx.reply(ctx.t('fetching'))
+    const fetchingMessage = await ctx.reply(ctx.t('fetching'), { reply_markup: { remove_keyboard: true } })
 
     const [userNatalChartError, userNatalChart] = await safeAsync(this.natalChartsRepository.getLatestForUser({ userId: Number(user.id) }))
 
     if (userNatalChartError && !this.isNotFoundApiError(userNatalChartError)) {
       await fetchingMessage.delete()
       await ctx.reply(ctx.t('errors-something-went-wrong'))
-      return
+      return null
     }
 
     if (userNatalChart) {
-      await ctx.safeReplyMarkdown(userNatalChart.interpretation)
-      return
+      await fetchingMessage.delete()
+      return userNatalChart.interpretation
     }
 
     const [generateForUserError, generatedUserNatalChart] = await safeAsync(this.natalChartsRepository.generateForUser({ userId: Number(user.id) }))
@@ -61,25 +60,36 @@ export class NatalChartsService {
     if (generateForUserError && !this.isQuotaLimitError(generateForUserError)) {
       await fetchingMessage.delete()
       await ctx.reply(ctx.t('errors-something-went-wrong'))
-      return
+      return null
     }
 
     if (this.isQuotaLimitError(generateForUserError)) {
       // TODO: возможно лучше выводить ошибку с бэка, с форматированным временем окончания лимита
       await fetchingMessage.delete()
       await ctx.reply(ctx.t('error-quota-limit'))
-      return
+      return null
     }
 
     if (!generatedUserNatalChart) {
       await fetchingMessage.delete()
       await ctx.reply(ctx.t('errors-something-went-wrong'))
+      return null
+    }
+
+    await fetchingMessage.delete()
+    return generatedUserNatalChart.interpretation
+  }
+
+  public async replyWithUserNatalChart(
+    ctx: Context,
+  ) {
+    const interpretation = await this.getUserNatalChart(ctx)
+
+    if (!interpretation) {
       return
     }
 
-    await ctx.safeReplyMarkdown(generatedUserNatalChart.interpretation)
-
-    await createProfileMessage(ctx).send()
+    await ctx.safeReplyMarkdown(interpretation)
   }
 
   // TODO: полностью неправильно, нужно отдельно брать информацию про guest пользователя, а не исползовать ctx.session.user
