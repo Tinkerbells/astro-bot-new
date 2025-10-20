@@ -2,11 +2,10 @@ import type { Conversation } from '@grammyjs/conversations'
 
 import type { Context } from '#root/bot/context.js'
 
-import { MenuId } from '#root/bot/shared/menus/menu-ids.js'
 import { canUseAstroFeature } from '#root/bot/shared/helpers/user.js'
-import { PROFILE_MENU_TEXT_KEY } from '#root/bot/shared/menus/index.js'
 import { birthDataForm } from '#root/bot/shared/forms/birth-data/index.js'
 import { setConversationLocale } from '#root/bot/shared/helpers/conversation-locale.js'
+import { sendProfileMenuOutsideConversation } from '#root/bot/shared/menus/profile-menu/utils/send-profile-menu.js'
 
 export const ASCENDANTS_GUEST_CONVERSATION = 'ascendants-guest'
 
@@ -27,34 +26,8 @@ export async function ascendantsGuestConversation(
 
   const checkpoint = conversation.checkpoint()
 
-  const menu = ctx.menuManager.createConversationMenu(conversation, MenuId.Profile)
-
-  const sendProfileMenuInConversation = async () => {
-    if (!menu) {
-      ctx.logger.error({ menuId: MenuId.Profile }, 'Profile conversation menu is not registered')
-      await ctx.safeReply(ctx.t(PROFILE_MENU_TEXT_KEY))
-      return
-    }
-
-    await conversation.external(async (externalCtx) => {
-      await ctx.menuManager.replyWithConversationMenu({
-        conversationCtx: ctx,
-        externalCtx,
-        menuKey: MenuId.Profile,
-        textKey: PROFILE_MENU_TEXT_KEY,
-        replyMarkup: menu,
-      })
-    })
-  }
-
   const handleCancel = async (externalCtx: Context) => {
-    await ctx.menuManager.replyWithConversationMenu({
-      conversationCtx: ctx,
-      externalCtx,
-      menuKey: MenuId.Profile,
-      textKey: PROFILE_MENU_TEXT_KEY,
-      replyMarkup: menu!,
-    })
+    await sendProfileMenuOutsideConversation(externalCtx)
   }
 
   const data = await birthDataForm(checkpoint, ctx, conversation, {
@@ -70,7 +43,6 @@ export async function ascendantsGuestConversation(
       lon: data.birthPlace.longitude,
     }
     await ctx.ascendantsService.replyWithGuestAscendant(ctx, dto)
+    await sendProfileMenuOutsideConversation(ctx)
   })
-
-  await sendProfileMenuInConversation()
 }

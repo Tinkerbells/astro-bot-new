@@ -3,12 +3,11 @@ import type { Conversation } from '@grammyjs/conversations'
 import type { Context } from '#root/bot/context.js'
 
 import { safeAsync } from '#root/shared/index.js'
-import { MenuId } from '#root/bot/shared/menus/menu-ids.js'
-import { PROFILE_MENU_TEXT_KEY } from '#root/bot/shared/menus/index.js'
 import { birthDataForm } from '#root/bot/shared/forms/birth-data/index.js'
 import { setConversationLocale } from '#root/bot/shared/helpers/conversation-locale.js'
+import { sendProfileMenuOutsideConversation } from '#root/bot/shared/menus/profile-menu/utils/send-profile-menu.js'
 
-import { compatibilityLabelStep } from './forms/compatibility-label.js'
+import { createCompatibilityLabelStep } from './forms/compatibility-label.js'
 
 export const COMPATIBILITIES_GUEST_CONVERSATION = 'compatibilities-guest'
 
@@ -22,6 +21,8 @@ export async function compatibilitiesGuestConversation(
   await ctx.reply('Заполните данные партнёра для расчёта совместимости')
 
   const checkpoint = conversation.checkpoint()
+
+  const compatibilityLabelStep = createCompatibilityLabelStep({ conversationId: COMPATIBILITIES_GUEST_CONVERSATION })
 
   const [labelError, label] = await safeAsync(compatibilityLabelStep({ ctx, conversation }).build())
 
@@ -56,28 +57,6 @@ export async function compatibilitiesGuestConversation(
     }
 
     await ctx.compatibilitiesService.replyWithUserGuestCompatibility(ctx, dto)
+    await sendProfileMenuOutsideConversation(ctx)
   })
-
-  // Создаем меню для conversation и отправляем сообщение с профилем
-  const menu = ctx.menuManager.createConversationMenu(conversation, MenuId.Profile)
-
-  const sendProfileMenuInConversation = async () => {
-    if (!menu) {
-      ctx.logger.error({ menuId: MenuId.Profile }, 'Profile conversation menu is not registered')
-      await ctx.safeReply(ctx.t(PROFILE_MENU_TEXT_KEY))
-      return
-    }
-
-    await conversation.external(async (externalCtx) => {
-      await ctx.menuManager.replyWithConversationMenu({
-        conversationCtx: ctx,
-        externalCtx,
-        menuKey: MenuId.Profile,
-        textKey: PROFILE_MENU_TEXT_KEY,
-        replyMarkup: menu,
-      })
-    })
-  }
-
-  await sendProfileMenuInConversation()
 }
