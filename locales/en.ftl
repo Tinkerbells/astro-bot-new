@@ -140,6 +140,7 @@ natal-chart-interpretation-text = { $interpretation }
 
 compatibilities-menu-title = 💞 Choose compatibility type:
 compatibilities-menu-user-guest = 👥 Compatibility with guest
+compatibilities-menu-by-username = 📱 By Telegram username
 compatibilities-menu-my-compatibilities = 📋 My Compatibilities
 compatibilities-menu-back = ◀️ Back
 compatibilities-guest-generating = 🌌 The universe is discovering your compatibility...
@@ -163,6 +164,11 @@ compatibilities-section-conclusions = 📝 Conclusions and Recommendations
 
 ## Compatibility Buttons
 compatibilities-button-unlock-full = 🔓 Unlock Full Analysis
+
+## Compatibility by Username Feature
+compatibilities-by-username-start = 📱 Let's calculate compatibility with a Telegram user
+compatibilities-partner-username-prompt = Enter your partner's Telegram username (e.g., @username or just username)
+compatibilities-partner-username-invalid = ⚠️ Invalid username format. Username must contain 5 to 32 characters (letters, numbers, underscore)
 
 ## Compatibility Lists
 compatibilities-your-compatibilities = Your Compatibilities

@@ -5,7 +5,10 @@ import type { Context } from '#root/bot/context.js'
 
 import { safeAsync } from '#root/shared/index.js'
 import { canUseAstroFeature } from '#root/bot/shared/helpers/user.js'
-import { COMPATIBILITIES_GUEST_CONVERSATION } from '#root/bot/features/index.js'
+import {
+  COMPATIBILITIES_BY_USERNAME_CONVERSATION,
+  COMPATIBILITIES_GUEST_CONVERSATION,
+} from '#root/bot/features/index.js'
 
 import { MenuId } from '../../menu-ids.js'
 import { createProfileMessage } from '../../profile-menu/utils/create-profile-message.js'
@@ -23,6 +26,24 @@ export function buildCompatibilitiesMenuRange(
           return
         }
         const [error] = await safeAsync(ctx.conversation.enter(COMPATIBILITIES_GUEST_CONVERSATION))
+        if (error) {
+          ctx.reply('errors-something-went-wrong')
+          ctx.logger.error({ err: error })
+        }
+      },
+    )
+    .row()
+
+  range
+    .text(
+      ctx => ctx.t('compatibilities-menu-by-username'),
+      async (ctx) => {
+        if (!canUseAstroFeature(ctx.session.user)) {
+          // TODO: i18n
+          await ctx.reply('Вы не заполнили профиль! /onboarding')
+          return
+        }
+        const [error] = await safeAsync(ctx.conversation.enter(COMPATIBILITIES_BY_USERNAME_CONVERSATION))
         if (error) {
           ctx.reply('errors-something-went-wrong')
           ctx.logger.error({ err: error })

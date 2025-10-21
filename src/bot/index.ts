@@ -27,7 +27,13 @@ import { createUserSessionMiddleware } from '#root/bot/shared/middlewares/user.j
 import { ONBOARDING_CONVERSATION, onboardingConversation, onboardingFeature } from '#root/bot/features/onboarding/index.js'
 import { ASCENDANTS_GUEST_CONVERSATION, ascendantsFeature, ascendantsGuestConversation } from '#root/bot/features/ascendants/index.js'
 import { NATAL_CHARTS_GUEST_CONVERSATION, natalChartsFeature, natalChartsGuestConversation } from '#root/bot/features/natal-charts/index.js'
-import { COMPATIBILITIES_GUEST_CONVERSATION, compatibilitiesFeature, compatibilitiesGuestConversation } from '#root/bot/features/compatibilities/index.js'
+import {
+  COMPATIBILITIES_BY_USERNAME_CONVERSATION,
+  COMPATIBILITIES_GUEST_CONVERSATION,
+  compatibilitiesByUsernameConversation,
+  compatibilitiesFeature,
+  compatibilitiesGuestConversation,
+} from '#root/bot/features/compatibilities/index.js'
 
 import type { UserService } from './services/user-service/index.js'
 import type { CityService } from './services/city-service/city-service.js'
@@ -174,6 +180,7 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
   protectedBot.use(createConversation(natalChartsGuestConversation, NATAL_CHARTS_GUEST_CONVERSATION))
   protectedBot.use(createConversation(ascendantsGuestConversation, ASCENDANTS_GUEST_CONVERSATION))
   protectedBot.use(createConversation(compatibilitiesGuestConversation, COMPATIBILITIES_GUEST_CONVERSATION))
+  protectedBot.use(createConversation(compatibilitiesByUsernameConversation, COMPATIBILITIES_BY_USERNAME_CONVERSATION))
 
   // Потом регистрируем меню (которые используют conversations)
   protectedBot.use(profileMenu)
