@@ -1,5 +1,3 @@
-import { InlineKeyboard } from 'grammy'
-
 import type { Context } from '#root/bot/context.js'
 import type { Logger } from '#root/shared/logger.js'
 import type { NatalChartCompatibilitiesRepositoryDTO } from '#root/data/index.js'
@@ -8,6 +6,7 @@ import type { NatalChartCompatibilitiesRepository } from '#root/data/repositorie
 import { logger } from '#root/shared/logger.js'
 import { safeAsync } from '#root/shared/index.js'
 import { FORBIDDEN_ERROR_INFO } from '#root/shared/http/index.js'
+import { NOT_FOUND_HTTP_CODE } from '#root/shared/http/net-error.js'
 import { ApiDataError } from '#root/shared/api-client/error/index.js'
 import { natalChartCompatibilitiesRepository } from '#root/data/repositories/natal-chart-compatibilities-repository/natal-chart-compatibilities-repository.js'
 
@@ -47,20 +46,9 @@ export class CompatibilitiesService {
       return
     }
 
-    // Сохраняем interpretation в session для последующего открытия
-    if (!isOpen) {
-      ctx.session.lastCompatibilityInterpretation = compatibility.interpretation
-    }
-
     const formattedInterpretation = this.formatInterpretation(ctx, compatibility.interpretation, isOpen)
 
-    const keyboard = isOpen
-      ? undefined
-      : new InlineKeyboard().text(ctx.t('compatibilities-button-unlock-full'), `compatibility:unlock`)
-    await ctx.reply(formattedInterpretation, {
-      reply_markup: keyboard,
-      parse_mode: 'HTML',
-    })
+    await ctx.reply(formattedInterpretation, { parse_mode: 'HTML' })
   }
 
   public async replyWithCompatibilityBySocialName(
@@ -74,7 +62,7 @@ export class CompatibilitiesService {
       this.natalChartCompatibilitiesRepository.createBySocialName(dto),
     )
 
-    if (compatibilityError && !this.isQuotaLimitError(compatibilityError)) {
+    if (compatibilityError && !this.isQuotaLimitError(compatibilityError) && !this.isNotFoundError(compatibilityError)) {
       await fetchingMessage.delete()
       await ctx.reply(ctx.t('errors-something-went-wrong'))
       return
@@ -86,26 +74,21 @@ export class CompatibilitiesService {
       return
     }
 
+    if (this.isNotFoundError(compatibilityError)) {
+      await fetchingMessage.delete()
+      await ctx.reply(this.getNotFoundMessage(compatibilityError) || ctx.t('errors-something-went-wrong'))
+      return
+    }
+
     if (!compatibility) {
       await fetchingMessage.delete()
       await ctx.reply(ctx.t('error-quota-limit'))
       return
     }
 
-    // Сохраняем interpretation в session для последующего открытия
-    if (!isOpen) {
-      ctx.session.lastCompatibilityInterpretation = compatibility.interpretation
-    }
-
     const formattedInterpretation = this.formatInterpretation(ctx, compatibility.interpretation, isOpen)
 
-    const keyboard = isOpen
-      ? undefined
-      : new InlineKeyboard().text(ctx.t('compatibilities-button-unlock-full'), `compatibility:unlock`)
-    await ctx.reply(formattedInterpretation, {
-      reply_markup: keyboard,
-      parse_mode: 'HTML',
-    })
+    await ctx.reply(formattedInterpretation, { parse_mode: 'HTML' })
   }
 
   private formatInterpretation(
@@ -151,6 +134,26 @@ export class CompatibilitiesService {
     }
 
     return `${header}\n\n${content}`
+  }
+
+  private isNotFoundError(error: unknown): boolean {
+    if (!(error instanceof ApiDataError)) {
+      return false
+    }
+
+    return error.errors[0].additionalInfo.statusCode === NOT_FOUND_HTTP_CODE
+  }
+
+  private getNotFoundMessage(error: unknown): string | null {
+    if (!(error instanceof ApiDataError)) {
+      return null
+    }
+
+    if (!this.isNotFoundError(error)) {
+      return null
+    }
+
+    return error.errors[0].message
   }
 
   private isQuotaLimitError(error: unknown): boolean {

@@ -84,17 +84,6 @@ export async function compatibilitiesByUsernameConversation(
     return
   }
 
-  const compatibilityLabelStep = createCompatibilityLabelStep({ conversationId: COMPATIBILITIES_BY_USERNAME_CONVERSATION })
-
-  const [labelError, label] = await safeAsync(compatibilityLabelStep({ ctx, conversation }).build())
-
-  if (labelError || !label) {
-    ctx.logger.error({ err: labelError })
-    await ctx.reply(ctx.t('errors-something-went-wrong'))
-    conversation.rewind(checkpoint)
-    return
-  }
-
   await conversation.external(async (ctx) => {
     const user = ctx.session.user
     const userName = user.firstName || user.lastName || 'Вы'
@@ -103,11 +92,11 @@ export async function compatibilitiesByUsernameConversation(
       userId: Number(user.id),
       body: {
         partnerSocialName: partnerUsername,
-        label: `${userName} и ${label}`,
+        label: `${userName} и ${partnerUsername}`,
       },
     }
 
     await ctx.compatibilitiesService.replyWithCompatibilityBySocialName(ctx, dto)
-    await sendProfileMenuOutsideConversation(ctx)
+    // await sendProfileMenuOutsideConversation(ctx)
   })
 }
