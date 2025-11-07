@@ -43,6 +43,7 @@ import type { CompatibilitiesService } from './services/natal-chart-compatibilit
 
 import { profileMenu } from './shared/menus/index.js'
 import { safeReply } from './shared/helpers/safe-reply.js'
+import { ignoreOld } from './shared/middlewares/ignore-old.js'
 import { OnboardingStatus } from './shared/types/onboarding.types.js'
 import { createMenuManager } from './shared/services/menu-manager.js'
 import { safeEditMarkdownMessage, safeReplyMarkdown } from './shared/helpers/safe-reply-markdown.js'
@@ -111,6 +112,7 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
   protectedBot.use(autoChatAction(bot.api))
   protectedBot.use(hydrateReply)
   protectedBot.use(hydrate())
+  protectedBot.use(ignoreOld())
   protectedBot.use(session({
     getSessionKey: getUserSessionKey,
     initial: (): SessionData => {
