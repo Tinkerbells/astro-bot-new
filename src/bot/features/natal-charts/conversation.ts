@@ -2,9 +2,12 @@ import type { Conversation } from '@grammyjs/conversations'
 
 import type { Context } from '#root/bot/context.js'
 
+import { MenuId } from '#root/bot/shared/menus/menu-ids.js'
 import { canUseAstroFeature } from '#root/bot/shared/helpers/user.js'
 import { birthDataForm } from '#root/bot/shared/forms/birth-data/index.js'
 import { setConversationLocale } from '#root/bot/shared/helpers/conversation-locale.js'
+import { createProfileMessage } from '#root/bot/shared/menus/profile-menu/utils/index.js'
+import { buildProfileMenuRange } from '#root/bot/shared/menus/profile-menu/utils/build-profile-menu-range.js'
 import { sendProfileMenuOutsideConversation } from '#root/bot/shared/menus/profile-menu/utils/send-profile-menu.js'
 
 export const NATAL_CHARTS_GUEST_CONVERSATION = 'natal-charts-guest'
@@ -44,6 +47,11 @@ export async function natalChartsGuestConversation(
       longitude: data.birthPlace.longitude,
     }
     await ctx.natalChartsService.replyWithGuestNatalChart(ctx, dto)
-    await sendProfileMenuOutsideConversation(ctx)
   })
+
+  const menu = conversation.menu(MenuId.Profile).dynamic((_, range) => buildProfileMenuRange(range))
+
+  const message = createProfileMessage(ctx).getText()
+
+  await ctx.safeReply(message, { reply_markup: menu })
 }
