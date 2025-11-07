@@ -18,6 +18,12 @@ export function buildNatalChartsMenuRange(
       ctx => ctx.t('natal-charts-menu-my-chart'),
       MenuId.PersonalNatalChart,
       async (ctx) => {
+        if (!canUseAstroFeature(ctx.session.user)) {
+          // TODO: i18n
+          await ctx.reply('Вы не заполнили профиль! /onboarding')
+          ctx.menu.back()
+          return
+        }
         const [error, data] = await safeAsync(ctx.natalChartsService.getUserNatalChart(ctx))
         if (error) {
           await ctx.reply(ctx.t('errors-something-went-wrong'))

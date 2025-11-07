@@ -1,6 +1,5 @@
 import type { Context } from '#root/bot/context.js'
 import type { Logger } from '#root/shared/logger.js'
-import type { User } from '#root/domain/entities/index.js'
 import type { NatalChartsRepositoryDTO } from '#root/data/index.js'
 import type { NatalChartsRepository } from '#root/data/repositories/natal-charts-repository/natal-charts-repository.js'
 
@@ -16,29 +15,10 @@ export class NatalChartsService {
     private readonly logger: Logger,
   ) { }
 
-  public canGenerateUserChart(user: User): boolean {
-    if (!user) {
-      return false
-    }
-
-    return Boolean(
-      user.birthDate
-      && user.birthTime
-      && user.timezone
-      && user.latitude !== undefined
-      && user.longitude !== undefined,
-    )
-  }
-
   public async getUserNatalChart(
     ctx: Context,
   ) {
     const user = ctx.session.user
-
-    if (!this.canGenerateUserChart(user)) {
-      await ctx.reply(ctx.t('natal-charts-user-missing-data'))
-      return null
-    }
 
     const fetchingMessage = await ctx.reply(ctx.t('fetching'), { reply_markup: { remove_keyboard: true } })
 
@@ -94,7 +74,7 @@ export class NatalChartsService {
 
   // TODO: полностью неправильно, нужно отдельно брать информацию про guest пользователя, а не исползовать ctx.session.user
   public async replyWithGuestNatalChart(ctx: Context, dto: NatalChartsRepositoryDTO.GenerateGuestDTO): Promise<void> {
-    const fetchingMessage = await ctx.reply(ctx.t('fetching'))
+    const fetchingMessage = await ctx.reply(ctx.t('fetching'), { reply_markup: { remove_keyboard: true } })
 
     const [guestNatalChartError, guestNatalChart] = await safeAsync(this.natalChartsRepository.generateGuest(dto))
 
