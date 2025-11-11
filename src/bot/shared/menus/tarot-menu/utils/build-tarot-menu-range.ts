@@ -5,9 +5,19 @@ import type { Context } from '#root/bot/context.js'
 
 import { safeAsync } from '#root/shared/index.js'
 import { TarotRepositoryDTO } from '#root/data/index.js'
+import { ConversationsEnum } from '#root/bot/conversations/enum.js'
 
 import { MenuId } from '../../menu-ids.js'
 import { createProfileMessage } from '../../profile-menu/utils/create-profile-message.js'
+
+const SPREAD_TYPE_WITH_QUESTION = [
+  TarotRepositoryDTO.TarotSpreadTypesEnum.three_card,
+  TarotRepositoryDTO.TarotSpreadTypesEnum.yes_no,
+  TarotRepositoryDTO.TarotSpreadTypesEnum.love,
+  TarotRepositoryDTO.TarotSpreadTypesEnum.celtic_cross,
+  TarotRepositoryDTO.TarotSpreadTypesEnum.career,
+  TarotRepositoryDTO.TarotSpreadTypesEnum.decision,
+]
 
 // Mapping spread types to translation keys
 const SPREAD_TRANSLATIONS: Record<TarotRepositoryDTO.TarotSpreadType, string> = {
@@ -29,34 +39,45 @@ export function buildTarotMenuRange(
     .filter((value): value is TarotRepositoryDTO.TarotSpreadType => typeof value === 'number')
 
   // Create submenu button for each spread type
-  spreadTypes.forEach((spreadType, index) => {
+  spreadTypes.forEach(async (spreadType, index) => {
     const translationKey = SPREAD_TRANSLATIONS[spreadType]
 
-    range.submenu(
-      ctx => ctx.t(translationKey),
-      MenuId.TarotReading,
-      async (ctx) => {
-        // Create reading with the selected spread type
-        const [error, reading] = await safeAsync(
-          ctx.tarotService.createReading(ctx, {
-            spreadType,
-          }),
-        )
+    const requiresQuestion = SPREAD_TYPE_WITH_QUESTION.includes(spreadType)
 
-        if (error) {
-          await ctx.reply(ctx.t('errors-something-went-wrong'))
-          ctx.logger.error({ err: error }, 'Failed to create tarot reading')
-          ctx.menu.back()
-          return
-        }
+    if (requiresQuestion) {
+      range.text(
+        ctx => ctx.t(translationKey),
+        async (ctx) => {
+          await ctx.conversation.enter(ConversationsEnum.tarot, spreadType)
+        },
+      )
+    }
+    else {
+      range.submenu(
+        ctx => ctx.t(translationKey),
+        MenuId.TarotReading,
+        async (ctx) => {
+          const [error, reading] = await safeAsync(
+            ctx.tarotService.createReading(ctx, {
+              spreadType,
+            }),
+          )
 
-        if (reading) {
-          // Format the reading as text for display
-          const message = formatTarotReadingForMenu(ctx, reading)
-          await ctx.editMessageText(message, { parse_mode: 'Markdown' })
-        }
-      },
-    )
+          if (error) {
+            await ctx.reply(ctx.t('errors-something-went-wrong'))
+            ctx.logger.error({ err: error }, 'Failed to create tarot reading')
+            ctx.menu.back()
+            return
+          }
+
+          if (reading) {
+            // Format the reading as text for display
+            const message = formatTarotReadingForMenu(ctx, reading)
+            await ctx.editMessageText(message, { parse_mode: 'Markdown' })
+          }
+        },
+      )
+    }
 
     // Add row break after every 2 buttons for better layout
     if ((index + 1) % 2 === 0) {
