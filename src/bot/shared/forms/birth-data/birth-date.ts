@@ -54,14 +54,16 @@ function createBirthDateStep(options: BirthDateStepOptions): FormStepFactory<Con
       })
     },
 
-    async build({ ctx, form, validate, prompt, plugins }) {
+    async build({ ctx, form, validate, plugins }) {
       const cancelPlugin = plugins.get('cancel')
       cancelPlugin.setButton(ctx.t('cancel'))
       if (options.onCancel) {
         cancelPlugin.setOnCancel(options.onCancel)
       }
 
-      await prompt()
+      const promptMessage = await ctx.reply(ctx.t('astro-data-birth-date'), {
+        reply_markup: plugins.get('cancel').createKeyboard(),
+      })
 
       const birthDate = await form.build<string | null>({
         collationKey: 'form-birth-date',
@@ -76,6 +78,8 @@ function createBirthDateStep(options: BirthDateStepOptions): FormStepFactory<Con
 
           try {
             await validate(parsed)
+            await promptMessage.delete()
+            await ctx.deleteMessage()
             return { ok: true, value: parsed }
           }
           catch (error) {

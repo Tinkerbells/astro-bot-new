@@ -114,12 +114,18 @@ function createBirthPlaceStep(options: BirthPlaceStepOptions): FormStepFactory<C
       })
     },
 
-    async build({ ctx, form, prompt, plugins }) {
+    async build({ ctx, form, plugins }) {
       const cancelPlugin = plugins.get('cancel')
       cancelPlugin.setButton(ctx.t('cancel'))
       cancelPlugin.setOnCancel(options.onCancel)
 
-      await prompt()
+      const locationKeyboardMessage = await ctx.reply('Введите его название или используете кнопку геолокации', { reply_markup: createLocationRequestKeyboard(ctx) })
+      const citiesKeyboardMessage = await ctx.reply('Популярные города', {
+        reply_markup: createCitiesInlineKeyboard(
+          'astro-data:timezone:city',
+          plugins.get('cancel').createKeyboard(),
+        ),
+      })
 
       const birthPlace = await form.build({
         collationKey: 'form-birth-place',
@@ -131,6 +137,8 @@ function createBirthPlaceStep(options: BirthPlaceStepOptions): FormStepFactory<C
             const selectedCity = City.getPopularRussianCityByIndex(index)
             if (!selectedCity || !selectedCity.timezone)
               return { ok: false, error: new Error('Invalid city data') }
+            await locationKeyboardMessage.delete()
+            await citiesKeyboardMessage.delete()
             return {
               ok: true,
               value: {
@@ -149,6 +157,10 @@ function createBirthPlaceStep(options: BirthPlaceStepOptions): FormStepFactory<C
 
             if (!isValidTimezone(timezone))
               return { ok: false, error: new Error('Неправильная timezone') }
+
+            await ctx.deleteMessage()
+            await locationKeyboardMessage.delete()
+            await citiesKeyboardMessage.delete()
 
             return {
               ok: true,
@@ -178,6 +190,9 @@ function createBirthPlaceStep(options: BirthPlaceStepOptions): FormStepFactory<C
             const foundCity = cities[0]
             if (!foundCity.timezone || !isValidTimezone(foundCity.timezone))
               return { ok: false, error: new Error('Invalid city timezone') }
+            await ctx.deleteMessage()
+            await locationKeyboardMessage.delete()
+            await citiesKeyboardMessage.delete()
             return {
               ok: true,
               value: {

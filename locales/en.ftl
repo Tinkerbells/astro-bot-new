@@ -189,3 +189,28 @@ fetching = The Universe thinks...
 
 cancel = Cancel
 skip = Skip
+
+## Tarot Readings Feature
+
+tarot-menu-back = ◀️ Back
+tarot-menu-title = 🃏 Choose a Tarot spread:
+
+## Tarot Spread Types
+tarot-menu-one-card = 🎴 One Card
+tarot-menu-three-card = 🔮 Three Cards
+tarot-menu-yes-no = ❓ Yes/No
+tarot-menu-love = 💕 Love Spread
+tarot-menu-celtic-cross = ✨ Celtic Cross
+tarot-menu-career = 💼 Career
+tarot-menu-yearly = 📅 Yearly Forecast
+tarot-menu-decision = 🤔 Decision
+
+## Tarot Reading Display
+tarot-cards = Cards
+tarot-interpretation = Interpretation
+tarot-advice = Advice
+tarot-card-meanings = Card Meanings
+tarot-reversed = reversed
+
+## Tarot Errors
+tarot-reading-not-found = ⚠️ Reading not found.

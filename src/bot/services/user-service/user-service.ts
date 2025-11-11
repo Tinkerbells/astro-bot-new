@@ -14,7 +14,8 @@ export class UserService {
 
   public async loadUserBySocialId(dto: UserRepositoryDTO.GetUserBySocialIdDTO): Promise<User> {
     try {
-      return await this.userRepository.getBySocialId(dto)
+      const user = await this.userRepository.getBySocialId(dto)
+      return user
     }
     catch (error) {
       throw new Error(`Не удалось загрузить пользователя с socialId ${dto.socialId}: ${error}`)
@@ -32,7 +33,8 @@ export class UserService {
 
   public async getOrCreateUser(dto: UserRepositoryDTO.RegisterUserDTO): Promise<User> {
     try {
-      return await this.loadUserBySocialId({ socialId: dto.socialId })
+      const user = await this.loadUserBySocialId({ socialId: dto.socialId })
+      return user
     }
     catch (error) {
       this.logger.error(error instanceof Error && error.message)

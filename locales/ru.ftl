@@ -188,3 +188,28 @@ locale-code = ru-RU
 ## Errors
 
 error-quota-limit = ⚠️ Достигнут лимит запросов. Пожалуйста, попробуйте позже.
+
+## Tarot Readings Feature
+
+tarot-menu-back = ◀️ Назад
+tarot-menu-title = 🃏 Выберите расклад Таро:
+
+## Tarot Spread Types
+tarot-menu-one-card = 🎴 Одна карта
+tarot-menu-three-card = 🔮 Три карты
+tarot-menu-yes-no = ❓ Да/Нет
+tarot-menu-love = 💕 Любовный расклад
+tarot-menu-celtic-cross = ✨ Кельтский крест
+tarot-menu-career = 💼 Карьера
+tarot-menu-yearly = 📅 Годовой прогноз
+tarot-menu-decision = 🤔 Решение
+
+## Tarot Reading Display
+tarot-cards = Карты
+tarot-interpretation = Интерпретация
+tarot-advice = Совет
+tarot-card-meanings = Значения карт
+tarot-reversed = перевёрнутая
+
+## Tarot Errors
+tarot-reading-not-found = ⚠️ Расклад не найден.

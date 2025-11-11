@@ -36,6 +36,7 @@ import {
 } from '#root/bot/features/compatibilities/index.js'
 
 import type { UserService } from './services/user-service/index.js'
+import type { TarotService } from './services/tarot-service/index.js'
 import type { CityService } from './services/city-service/city-service.js'
 import type { AscendantsService } from './services/ascendants-service/index.js'
 import type { NatalChartsService } from './services/natal-charts-service/index.js'
@@ -43,7 +44,9 @@ import type { CompatibilitiesService } from './services/natal-chart-compatibilit
 
 import { profileMenu } from './shared/menus/index.js'
 import { safeReply } from './shared/helpers/safe-reply.js'
+import { ConversationsEnum } from './conversations/enum.js'
 import { ignoreOld } from './shared/middlewares/ignore-old.js'
+import { tarotConversation } from './conversations/tarot/index.js'
 import { OnboardingStatus } from './shared/types/onboarding.types.js'
 import { createMenuManager } from './shared/services/menu-manager.js'
 import { safeEditMarkdownMessage, safeReplyMarkdown } from './shared/helpers/safe-reply-markdown.js'
@@ -56,6 +59,7 @@ type Dependencies = {
   natalChartsService: NatalChartsService
   ascendantsService: AscendantsService
   compatibilitiesService: CompatibilitiesService
+  tarotService: TarotService
 }
 
 function getUserSessionKey(ctx: Omit<Context, 'session'>) {
@@ -77,6 +81,7 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
     natalChartsService,
     ascendantsService,
     compatibilitiesService,
+    tarotService,
   } = dependencies
 
   const bot = new TelegramBot<Context>(token, botConfig)
@@ -87,6 +92,7 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
     ctx.natalChartsService = natalChartsService
     ctx.ascendantsService = ascendantsService
     ctx.compatibilitiesService = compatibilitiesService
+    ctx.tarotService = tarotService
     ctx.menuManager = createMenuManager(ctx)
     ctx.cityService = cityService
     ctx.logger = logger.child({
@@ -155,7 +161,7 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
       getStorageKey: getUserConversationKey,
     },
     plugins: [
-      // Добавляем config, logger, userService, natalChartsService, ascendantsService и natalChartCompatibilitiesService в контекст диалога
+      // Добавляем config, logger, userService, natalChartsService, ascendantsService, natalChartCompatibilitiesService и tarotService в контекст диалога
       hydrate(),
       async (ctx, next) => {
         ctx.config = config
@@ -164,6 +170,7 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
         ctx.ascendantsService = ascendantsService
         ctx.menuManager = createMenuManager(ctx)
         ctx.compatibilitiesService = compatibilitiesService
+        ctx.tarotService = tarotService
         ctx.cityService = cityService
         ctx.logger = logger.child({
           update_id: ctx.update.update_id,
@@ -178,6 +185,7 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
   }))
 
   // Сначала регистрируем все conversations
+  protectedBot.use(createConversation(tarotConversation, ConversationsEnum.tarot))
   protectedBot.use(createConversation(onboardingConversation, ONBOARDING_CONVERSATION))
   protectedBot.use(createConversation(natalChartsGuestConversation, NATAL_CHARTS_GUEST_CONVERSATION))
   protectedBot.use(createConversation(ascendantsGuestConversation, ASCENDANTS_GUEST_CONVERSATION))

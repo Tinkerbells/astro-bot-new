@@ -14,4 +14,6 @@ export enum MenuId {
   Compatibilities = 'compatibilities-menu',
   Compatibility = 'compatibility-menu',
   CompatibilitiesList = 'compatibilities-list-menu',
+  Tarot = 'tarot-menu',
+  TarotReading = 'tarot-reading',
 }

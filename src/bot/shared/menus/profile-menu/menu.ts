@@ -3,6 +3,7 @@ import { Menu } from '@grammyjs/menu'
 import type { Context } from '#root/bot/context.js'
 
 import { MenuId } from '../menu-ids.js'
+import { tarotMenu } from '../tarot-menu/index.js'
 import { buildProfileMenuRange } from './utils/index.js'
 import { ascendantsMenu } from '../ascendants-menu/index.js'
 import { natalChartsMenu } from '../natal-charts-menu/index.js'
@@ -17,9 +18,11 @@ export const profileMenu = new Menu<Context>(MenuId.Profile).dynamic((_, range) 
     natalChartsMenuId: MenuId.NatalCharts,
     ascendantsMenuId: MenuId.Ascendants,
     compatibilitiesMenuId: MenuId.Compatibilities,
+    tarotMenuId: MenuId.Tarot,
   })
 })
 
 profileMenu.register(natalChartsMenu)
 profileMenu.register(ascendantsMenu)
 profileMenu.register(compatibilitiesMenu)
+profileMenu.register(tarotMenu)

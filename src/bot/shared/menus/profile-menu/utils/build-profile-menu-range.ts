@@ -17,6 +17,7 @@ type ProfileMenuOptions = {
   natalChartsMenuId?: string
   ascendantsMenuId?: string
   compatibilitiesMenuId?: string
+  tarotMenuId?: string
 }
 
 export function buildProfileMenuRange(
@@ -68,12 +69,20 @@ export function buildProfileMenuRange(
     )
   }
 
-  range.text(
-    ctx => ctx.t('profile-menu-tarot'),
-    async (ctx) => {
-      await ctx.reply(ctx.t('profile-tarot-message'))
-    },
-  ).row()
+  if (options.tarotMenuId) {
+    range.submenu(
+      ctx => ctx.t('profile-menu-tarot'),
+      options.tarotMenuId,
+    ).row()
+  }
+  else {
+    range.text(
+      ctx => ctx.t('profile-menu-tarot'),
+      async (ctx) => {
+        await ctx.reply(ctx.t('profile-tarot-message'))
+      },
+    ).row()
+  }
 
   range.text(
     ctx => ctx.t('profile-menu-settings'),

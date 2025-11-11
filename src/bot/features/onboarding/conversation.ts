@@ -41,7 +41,7 @@ export async function onboardingConversation(
   )
 
   const [updateError] = await safeAsync(conversation.external(async (ctx) => {
-    const [error, user] = await safeAsync(ctx.userService.updateUser(
+    const [error] = await safeAsync(ctx.userService.updateUser(
       { id: ctx.session.user.id },
       {
         birthDate: data.birthDate!,
@@ -51,10 +51,18 @@ export async function onboardingConversation(
         timezone: data.birthPlace?.timezone,
       },
     ))
-    if (error || !user) {
+    if (error) {
       ctx.logger.error({ error }, 'Failed to update user during onboarding')
       throw error
     }
+
+    const [getUserError, user] = await safeAsync(ctx.userService.loadUserBySocialId({ socialId: String(ctx.from?.id) }))
+
+    if (getUserError || !user) {
+      ctx.logger.error({ error }, 'Failed to update user during onboarding')
+      throw error
+    }
+
     updateSessionUser(ctx, user)
     updateOnboardingStatus(ctx, OnboardingStatus.Completed)
   }),

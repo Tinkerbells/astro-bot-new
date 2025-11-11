@@ -93,7 +93,7 @@ function createBirthTimeStep(options: BirthTimeStepOptions): FormStepFactory<Con
       }
     },
 
-    async build({ ctx, form, validate, prompt, plugins }) {
+    async build({ ctx, form, validate, plugins }) {
       const skipPlugin = plugins.get('skip')
       const cancelPlugin = plugins.get('cancel')
 
@@ -103,7 +103,20 @@ function createBirthTimeStep(options: BirthTimeStepOptions): FormStepFactory<Con
         cancelPlugin.setOnCancel(options.onCancel)
       }
 
-      await prompt()
+      let message
+
+      if (canSkip) {
+        const skipKeyboard = plugins.get('skip').createKeyboard()
+        const cancelKeyboard = plugins.get('cancel').createKeyboard()
+        skipKeyboard.inline_keyboard.push(...cancelKeyboard.inline_keyboard)
+
+        message = await ctx.reply(ctx.t('astro-data-birth-time'), { reply_markup: skipKeyboard })
+      }
+      else {
+        message = await ctx.reply(ctx.t('astro-data-birth-time'), {
+          reply_markup: plugins.get('cancel').createKeyboard(),
+        })
+      }
 
       const birthTime = await form.build<string | null>({
         collationKey: 'form-birth-time',
@@ -118,6 +131,7 @@ function createBirthTimeStep(options: BirthTimeStepOptions): FormStepFactory<Con
 
           try {
             await validate(parsed)
+            await message.delete()
             return { ok: true, value: parsed }
           }
           catch (error) {
