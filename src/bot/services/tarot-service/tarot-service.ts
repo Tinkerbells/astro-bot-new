@@ -139,6 +139,19 @@ export class TarotService {
     ctx: Context,
     reading: TarotRepositoryDTO.TarotReadingResponseDTO,
   ): Promise<void> {
+    const hasCardImages = reading.cards.some(card => Boolean(card.imageUrl))
+
+    if (hasCardImages) {
+      const messageWithoutCards = this.formatTarotReading(ctx, reading, { includeCardsSection: false })
+      const fullMessage = this.formatTarotReading(ctx, reading)
+
+      const sentWithImages = await this.replyWithCardImages(ctx, reading, messageWithoutCards)
+      if (!sentWithImages) {
+        await ctx.safeReplyMarkdown(fullMessage)
+      }
+      return
+    }
+
     const message = this.formatTarotReading(ctx, reading)
     await ctx.safeReplyMarkdown(message)
   }
@@ -149,7 +162,9 @@ export class TarotService {
   private formatTarotReading(
     ctx: Context,
     reading: TarotRepositoryDTO.TarotReadingResponseDTO,
+    options?: { includeCardsSection?: boolean },
   ): string {
+    const includeCardsSection = options?.includeCardsSection ?? true
     let message = ''
 
     // Title with label if available
@@ -157,13 +172,15 @@ export class TarotService {
       message += `*${reading.label}*\n\n`
     }
 
-    // Cards
-    message += `🎴 *${ctx.t('tarot-cards')}:*\n`
-    reading.cards.forEach((card, index) => {
-      const reversed = card.isReversed ? ` (${ctx.t('tarot-reversed')})` : ''
-      message += `${index + 1}. *${card.position}*: ${card.name}${reversed}\n`
-    })
-    message += '\n'
+    if (includeCardsSection) {
+      // Cards
+      message += `🎴 *${ctx.t('tarot-cards')}:*\n`
+      reading.cards.forEach((card, index) => {
+        const reversed = card.isReversed ? ` (${ctx.t('tarot-reversed')})` : ''
+        message += `${index + 1}. *${card.position}*: ${card.name}${reversed}\n`
+      })
+      message += '\n'
+    }
 
     // Interpretation
     message += `✨ *${ctx.t('tarot-interpretation')}:*\n${reading.interpretation}\n\n`
@@ -180,6 +197,47 @@ export class TarotService {
     }
 
     return message
+  }
+
+  private async replyWithCardImages(
+    ctx: Context,
+    reading: TarotRepositoryDTO.TarotReadingResponseDTO,
+    formattedMessage: string,
+  ): Promise<boolean> {
+    const cardsWithImages = reading.cards
+      .map((card, index) => ({ card, order: index + 1 }))
+      .filter(({ card }) => Boolean(card.imageUrl))
+
+    if (cardsWithImages.length === 0) {
+      return false
+    }
+
+    let formattedMessageSent = false
+
+    for (const { card, order } of cardsWithImages) {
+      const reversedLabel = card.isReversed ? ` (${ctx.t('tarot-reversed')})` : ''
+      const cardLine = `${order}. ${card.position}: ${card.name}${reversedLabel}`
+      const caption = formattedMessageSent ? cardLine : `${formattedMessage}\n\n${cardLine}`
+      const photoOptions = formattedMessageSent
+        ? { caption }
+        : { caption, parse_mode: 'Markdown' as const }
+
+      const [error] = await safeAsync(
+        ctx.replyWithPhoto(card.imageUrl as string, photoOptions),
+      )
+
+      if (error) {
+        this.logger.warn(
+          { error, cardId: card.id },
+          'Failed to send tarot card image',
+        )
+        return formattedMessageSent
+      }
+
+      formattedMessageSent = true
+    }
+
+    return formattedMessageSent
   }
 
   private isNotFoundApiError(error: unknown): boolean {

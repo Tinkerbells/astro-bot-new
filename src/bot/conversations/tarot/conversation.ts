@@ -5,7 +5,6 @@ import type { TarotRepositoryDTO } from '#root/data/repositories/tarot-repositor
 
 import { safeAsync } from '#root/shared/index.js'
 import { setConversationLocale } from '#root/bot/shared/helpers/conversation-locale.js'
-import { formatTarotReadingForMenu } from '#root/bot/shared/menus/tarot-menu/utils/build-tarot-menu-range.js'
 
 export async function tarotConversation(
   conversation: Conversation<Context, Context>,
@@ -48,7 +47,6 @@ export async function tarotConversation(
       return
     }
 
-    const readingMessage = formatTarotReadingForMenu(ctx, reading)
-    await ctx.reply(readingMessage)
+    await ctx.tarotService.replyWithReading(ctx, reading)
   }
 }

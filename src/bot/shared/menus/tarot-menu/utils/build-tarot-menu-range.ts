@@ -7,7 +7,6 @@ import { safeAsync } from '#root/shared/index.js'
 import { TarotRepositoryDTO } from '#root/data/index.js'
 import { ConversationsEnum } from '#root/bot/conversations/enum.js'
 
-import { MenuId } from '../../menu-ids.js'
 import { createProfileMessage } from '../../profile-menu/utils/create-profile-message.js'
 
 const SPREAD_TYPE_WITH_QUESTION = [
@@ -38,7 +37,7 @@ export function buildTarotMenuRange(
   const spreadTypes = Object.values(TarotRepositoryDTO.TarotSpreadTypesEnum)
     .filter((value): value is TarotRepositoryDTO.TarotSpreadType => typeof value === 'number')
 
-  // Create submenu button for each spread type
+  // Create button for each spread type
   spreadTypes.forEach(async (spreadType, index) => {
     const translationKey = SPREAD_TRANSLATIONS[spreadType]
 
@@ -53,9 +52,8 @@ export function buildTarotMenuRange(
       )
     }
     else {
-      range.submenu(
+      range.text(
         ctx => ctx.t(translationKey),
-        MenuId.TarotReading,
         async (ctx) => {
           const [error, reading] = await safeAsync(
             ctx.tarotService.createReading(ctx, {
@@ -66,15 +64,16 @@ export function buildTarotMenuRange(
           if (error) {
             await ctx.reply(ctx.t('errors-something-went-wrong'))
             ctx.logger.error({ err: error }, 'Failed to create tarot reading')
-            ctx.menu.back()
             return
           }
 
-          if (reading) {
-            // Format the reading as text for display
-            const message = formatTarotReadingForMenu(ctx, reading)
-            await ctx.editMessageText(message, { parse_mode: 'Markdown' })
+          if (!reading) {
+            ctx.logger.error('Tarot reading response is empty')
+            await ctx.reply(ctx.t('errors-something-went-wrong'))
+            return
           }
+
+          await ctx.tarotService.replyWithReading(ctx, reading)
         },
       )
     }
@@ -99,43 +98,4 @@ export function buildTarotMenuRange(
       ctx.menu.back()
     },
   )
-}
-
-/**
- * Format tarot reading for menu display
- */
-export function formatTarotReadingForMenu(
-  ctx: Context,
-  reading: TarotRepositoryDTO.TarotReadingResponseDTO,
-): string {
-  let message = ''
-
-  // Title with label if available
-  if (reading.label) {
-    message += `*${reading.label}*\n\n`
-  }
-
-  // Cards
-  message += `🎴 *${ctx.t('tarot-cards')}:*\n`
-  reading.cards.forEach((card, index) => {
-    const reversed = card.isReversed ? ` (${ctx.t('tarot-reversed')})` : ''
-    message += `${index + 1}. *${card.position}*: ${card.name}${reversed}\n`
-  })
-  message += '\n'
-
-  // Interpretation
-  message += `✨ *${ctx.t('tarot-interpretation')}:*\n${reading.interpretation}\n\n`
-
-  // Advice
-  message += `💡 *${ctx.t('tarot-advice')}:*\n${reading.advice}\n\n`
-
-  // Card meanings
-  if (reading.cardMeanings && reading.cardMeanings.length > 0) {
-    message += `📖 *${ctx.t('tarot-card-meanings')}:*\n`
-    reading.cardMeanings.forEach((meaning) => {
-      message += `\n*${meaning.position}* - ${meaning.cardName}:\n${meaning.meaning}\n`
-    })
-  }
-
-  return message
 }

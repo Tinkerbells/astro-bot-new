@@ -40,6 +40,10 @@ export class TarotReadingCardDTO {
 
   @IsBoolean()
   isReversed: boolean
+
+  @IsOptional()
+  @IsString()
+  imageUrl?: string | null
 }
 
 export class TarotReadingCardMeaningDTO {
