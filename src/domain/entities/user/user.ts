@@ -93,6 +93,11 @@ export class User {
   @IsInt()
   zodiacId?: number
 
+  @Expose()
+  @IsOptional()
+  @IsString()
+  referralCode?: string
+
   zodiac?: Zodiac
 
   @Expose()
