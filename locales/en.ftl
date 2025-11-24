@@ -88,8 +88,10 @@ profile-menu-ascendant = 🌅 Ascendant
 profile-menu-natal-chart = 🔮 Natal Chart
 profile-menu-compatibility = 💕 Check Compatibility
 profile-menu-tarot = 🃏 Tarot Spreads
+profile-menu-balance = 💰 Balance
 profile-menu-settings = ⚙️ Settings
 profile-menu-restart-onboarding = 🔄 Restart Registration
+profile-balance-message = Available: { $available } coins.
 
 profile-ascendant-message = 🌅 Ascendant information coming soon!
 profile-natal-chart-message = 🔮 Your natal chart is being prepared!

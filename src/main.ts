@@ -17,6 +17,7 @@ import { createServer, createServerManager } from '#root/server/index.js'
 import { cityService } from './bot/services/city-service/index.js'
 import { createUserService } from './bot/services/user-service/index.js'
 import { createTarotService } from './bot/services/tarot-service/index.js'
+import { createWalletService } from './bot/services/wallet-service/index.js'
 import { createAscendantsService } from './bot/services/ascendants-service/index.js'
 import { createNatalChartsService } from './bot/services/natal-charts-service/index.js'
 import { createCompatibilitiesService } from './bot/services/natal-chart-compatibilities-service/index.js'
@@ -27,6 +28,7 @@ const natalChartsService = createNatalChartsService()
 const ascendantsService = createAscendantsService()
 const compatibilitiesService = createCompatibilitiesService()
 const tarotService = createTarotService()
+const walletService = createWalletService()
 
 async function startPolling(config: PollingConfig) {
   const bot = createBot(config.botToken, {
@@ -38,6 +40,7 @@ async function startPolling(config: PollingConfig) {
     ascendantsService,
     compatibilitiesService,
     tarotService,
+    walletService,
   })
   let runner: undefined | RunnerHandle
 
@@ -77,6 +80,7 @@ async function startWebhook(config: WebhookConfig) {
     ascendantsService,
     compatibilitiesService,
     tarotService,
+    walletService,
   })
   const server = createServer({
     bot,

@@ -22,8 +22,16 @@ export class HmacInterceptor implements HttpInterceptor {
     // Generate unique request ID
     const requestId = this.generateRequestId(request)
 
+    let userId: string | undefined
+    if (request.headers instanceof AxiosHeaders) {
+      userId = request.headers.get('x-user-id') as string | undefined
+    }
+    else if (request.headers && 'x-user-id' in request.headers) {
+      userId = (request.headers as any)['x-user-id'] as string | undefined
+    }
+
     // Create HMAC signature
-    const bearerToken = this.createBotSignature({ requestId })
+    const bearerToken = this.createBotSignature({ requestId, userId })
 
     // Add Authorization header
     if (!request.headers) {

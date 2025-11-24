@@ -88,8 +88,10 @@ profile-menu-ascendant = 🌅 Асцендент
 profile-menu-natal-chart = 🔮 Натальная карта
 profile-menu-compatibility = 💕 Совместимость
 profile-menu-tarot = 🃏 Расклады Таро
+profile-menu-balance = 💰 Баланс
 profile-menu-settings = ⚙️ Настройки
 profile-menu-restart-onboarding = 🔄 Пройти регистрацию заново
+profile-balance-message = Доступно: { $available } монет.
 
 profile-ascendant-message = 🌅 Информация об Асценденте скоро появится!
 profile-natal-chart-message = 🔮 Ваша натальная карта готовится!

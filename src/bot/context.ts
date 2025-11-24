@@ -11,6 +11,7 @@ import type { Logger } from '#root/shared/logger.js'
 import type { User } from '#root/domain/entities/user/user.js'
 import type { UserService } from '#root/bot/services/user-service/index.js'
 import type { TarotService } from '#root/bot/services/tarot-service/index.js'
+import type { WalletService } from '#root/bot/services/wallet-service/index.js'
 import type { NatalChartCompatibilitiesRepositoryDTO } from '#root/data/index.js'
 import type { AscendantsService } from '#root/bot/services/ascendants-service/index.js'
 import type { NatalChartsService } from '#root/bot/services/natal-charts-service/index.js'
@@ -44,6 +45,7 @@ type ExtendedContextFlavor = {
   compatibilitiesService: CompatibilitiesService
   cityService: CityService
   tarotService: TarotService
+  walletService: WalletService
   safeReply: SafeReply
   safeReplyMarkdown: SafeReplyMarkdown
   safeEditMarkdownMessage: SafeEditMarkdownMessage

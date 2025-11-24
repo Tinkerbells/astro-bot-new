@@ -60,6 +60,7 @@ type Dependencies = {
   ascendantsService: AscendantsService
   compatibilitiesService: CompatibilitiesService
   tarotService: TarotService
+  walletService: import('./services/wallet-service/index.js').WalletService
 }
 
 function getUserSessionKey(ctx: Omit<Context, 'session'>) {
@@ -93,6 +94,7 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
     ctx.ascendantsService = ascendantsService
     ctx.compatibilitiesService = compatibilitiesService
     ctx.tarotService = tarotService
+    ctx.walletService = dependencies.walletService
     ctx.menuManager = createMenuManager(ctx)
     ctx.cityService = cityService
     ctx.logger = logger.child({
@@ -171,6 +173,7 @@ export function createBot(token: string, dependencies: Dependencies, botConfig?:
         ctx.menuManager = createMenuManager(ctx)
         ctx.compatibilitiesService = compatibilitiesService
         ctx.tarotService = tarotService
+        ctx.walletService = dependencies.walletService
         ctx.cityService = cityService
         ctx.logger = logger.child({
           update_id: ctx.update.update_id,

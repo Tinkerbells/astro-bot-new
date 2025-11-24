@@ -3,6 +3,7 @@ import type { ConversationMenuRange } from '@grammyjs/conversations'
 
 import type { Context } from '#root/bot/context.js'
 
+import { safeAsync } from '#root/shared/index.js'
 import { ONBOARDING_CONVERSATION } from '#root/bot/features/index.js'
 
 /**
@@ -83,6 +84,25 @@ export function buildProfileMenuRange(
       },
     ).row()
   }
+
+  range.text(
+    ctx => ctx.t('profile-menu-balance'),
+    async (ctx) => {
+      const [balanceError, balance] = await safeAsync(
+        ctx.walletService.getBalance(ctx.session.user.id),
+      )
+
+      if (balanceError || !balance) {
+        await ctx.reply(ctx.t('errors-something-went-wrong'))
+        ctx.logger.error({ err: balanceError }, 'Failed to fetch wallet balance')
+        return
+      }
+
+      await ctx.reply(ctx.t('profile-balance-message', {
+        available: balance.available,
+      }))
+    },
+  ).row()
 
   range.text(
     ctx => ctx.t('profile-menu-settings'),
