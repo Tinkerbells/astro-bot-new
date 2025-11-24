@@ -5,9 +5,9 @@ import type { NatalChartCompatibilitiesRepository } from '#root/data/repositorie
 
 import { logger } from '#root/shared/logger.js'
 import { safeAsync } from '#root/shared/index.js'
-import { FORBIDDEN_ERROR_INFO } from '#root/shared/http/index.js'
 import { NOT_FOUND_HTTP_CODE } from '#root/shared/http/net-error.js'
 import { ApiDataError } from '#root/shared/api-client/error/index.js'
+import { isInsufficientFundsErrorLike } from '#root/shared/http/index.js'
 import { natalChartCompatibilitiesRepository } from '#root/data/repositories/natal-chart-compatibilities-repository/natal-chart-compatibilities-repository.js'
 
 export class CompatibilitiesService {
@@ -27,22 +27,20 @@ export class CompatibilitiesService {
       this.natalChartCompatibilitiesRepository.createForUserWithGuest(dto),
     )
 
-    if (compatibilityError && !this.isQuotaLimitError(compatibilityError)) {
+    if (compatibilityError) {
       await fetchingMessage.delete()
-      await ctx.reply(ctx.t('errors-something-went-wrong'))
-      return
-    }
+      if (isInsufficientFundsErrorLike(compatibilityError)) {
+        await ctx.reply(ctx.t('error-insufficient-funds'))
+        return
+      }
 
-    if (this.isQuotaLimitError(compatibilityError)) {
-      // TODO: возможно лучше выводить ошибку с бэка, с форматированным временем окончания лимита
-      await fetchingMessage.delete()
-      await ctx.reply(ctx.t('error-quota-limit'))
+      await ctx.reply(ctx.t('errors-something-went-wrong'))
       return
     }
 
     if (!compatibility) {
       await fetchingMessage.delete()
-      await ctx.reply(ctx.t('error-quota-limit'))
+      await ctx.reply(ctx.t('errors-something-went-wrong'))
       return
     }
 
@@ -62,27 +60,26 @@ export class CompatibilitiesService {
       this.natalChartCompatibilitiesRepository.createBySocialName(dto),
     )
 
-    if (compatibilityError && !this.isQuotaLimitError(compatibilityError) && !this.isNotFoundError(compatibilityError)) {
+    if (compatibilityError) {
       await fetchingMessage.delete()
+
+      if (isInsufficientFundsErrorLike(compatibilityError)) {
+        await ctx.reply(ctx.t('error-insufficient-funds'))
+        return
+      }
+
+      if (this.isNotFoundError(compatibilityError)) {
+        await ctx.reply(this.getNotFoundMessage(compatibilityError) || ctx.t('errors-something-went-wrong'))
+        return
+      }
+
       await ctx.reply(ctx.t('errors-something-went-wrong'))
-      return
-    }
-
-    if (this.isQuotaLimitError(compatibilityError)) {
-      await fetchingMessage.delete()
-      await ctx.reply(ctx.t('error-quota-limit'))
-      return
-    }
-
-    if (this.isNotFoundError(compatibilityError)) {
-      await fetchingMessage.delete()
-      await ctx.reply(this.getNotFoundMessage(compatibilityError) || ctx.t('errors-something-went-wrong'))
       return
     }
 
     if (!compatibility) {
       await fetchingMessage.delete()
-      await ctx.reply(ctx.t('error-quota-limit'))
+      await ctx.reply(ctx.t('errors-something-went-wrong'))
       return
     }
 
@@ -150,26 +147,6 @@ export class CompatibilitiesService {
     }
 
     if (!this.isNotFoundError(error)) {
-      return null
-    }
-
-    return error.errors[0].message
-  }
-
-  private isQuotaLimitError(error: unknown): boolean {
-    if (!(error instanceof ApiDataError)) {
-      return false
-    }
-
-    return error.errors[0].additionalInfo.statusCode === FORBIDDEN_ERROR_INFO.code
-  }
-
-  private getQuotaLimitMessage(error: unknown): string | null {
-    if (!(error instanceof ApiDataError)) {
-      return null
-    }
-
-    if (!this.isQuotaLimitError(error)) {
       return null
     }
 

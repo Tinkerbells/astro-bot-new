@@ -181,6 +181,7 @@ locale-code = en-US
 ## Errors
 
 error-quota-limit = ⚠️ Request quota limit reached. Please try again later.
+error-insufficient-funds = Not enough coins. Please top up your balance and try again.
 
 
 ## Utils

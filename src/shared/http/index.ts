@@ -15,7 +15,10 @@ export {
 export {
   BAD_REQUEST_ERROR_INFO,
   FORBIDDEN_ERROR_INFO,
+  INSUFFICIENT_FUNDS_CODE,
+  INSUFFICIENT_FUNDS_HTTP_CODE,
   INTERNAL_ERROR_INFO,
+  isInsufficientFundsErrorLike,
   NetError,
   type NetErrorItem,
   NOT_FOUND_ERROR_INFO,

@@ -27,6 +27,10 @@ export function buildNatalChartsMenuRange(
         const [error, data] = await safeAsync(ctx.natalChartsService.getUserNatalChart(ctx))
         if (error) {
           await ctx.reply(ctx.t('errors-something-went-wrong'))
+          ctx.menu.back()
+        }
+        if (!data) {
+          ctx.menu.back()
         }
         if (!error && data) {
           ctx.safeEditMarkdownMessage(data)
@@ -41,12 +45,15 @@ export function buildNatalChartsMenuRange(
       async (ctx) => {
         if (!canUseAstroFeature(ctx.session.user)) {
           // TODO: i18n
+          //
           await ctx.reply('Вы не заполнили профиль! /onboarding')
+          ctx.menu.back()
           return
         }
         const [error] = await safeAsync(ctx.conversation.enter(NATAL_CHARTS_GUEST_CONVERSATION))
         if (error) {
           ctx.reply('errors-something-went-wrong')
+          ctx.menu.back()
           ctx.logger.error({ err: error })
         }
       },

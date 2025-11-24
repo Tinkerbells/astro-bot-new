@@ -6,7 +6,7 @@ import type { NatalChartsRepository } from '#root/data/repositories/natal-charts
 import { logger } from '#root/shared/logger.js'
 import { safeAsync } from '#root/shared/index.js'
 import { ApiDataError } from '#root/shared/api-client/error/index.js'
-import { FORBIDDEN_ERROR_INFO, NOT_FOUND_ERROR_INFO } from '#root/shared/http/index.js'
+import { isInsufficientFundsErrorLike, NOT_FOUND_ERROR_INFO } from '#root/shared/http/index.js'
 import { natalChartsRepository } from '#root/data/repositories/natal-charts-repository/natal-charts-repository.js'
 
 export class NatalChartsService {
@@ -37,16 +37,15 @@ export class NatalChartsService {
 
     const [generateForUserError, generatedUserNatalChart] = await safeAsync(this.natalChartsRepository.generateForUser({ userId: Number(user.id) }))
 
-    if (generateForUserError && !this.isQuotaLimitError(generateForUserError)) {
+    if (generateForUserError && !isInsufficientFundsErrorLike(generateForUserError)) {
       await fetchingMessage.delete()
       await ctx.reply(ctx.t('errors-something-went-wrong'))
       return null
     }
 
-    if (this.isQuotaLimitError(generateForUserError)) {
-      // TODO: возможно лучше выводить ошибку с бэка, с форматированным временем окончания лимита
+    if (isInsufficientFundsErrorLike(generateForUserError)) {
       await fetchingMessage.delete()
-      await ctx.reply(ctx.t('error-quota-limit'))
+      await ctx.reply(ctx.t('error-insufficient-funds'))
       return null
     }
 
@@ -78,16 +77,15 @@ export class NatalChartsService {
 
     const [guestNatalChartError, guestNatalChart] = await safeAsync(this.natalChartsRepository.generateGuest(dto))
 
-    if (guestNatalChartError && !this.isQuotaLimitError(guestNatalChartError)) {
+    if (guestNatalChartError && !isInsufficientFundsErrorLike(guestNatalChartError)) {
       await fetchingMessage.delete()
       await ctx.reply(ctx.t('errors-something-went-wrong'))
       return
     }
 
-    if (this.isQuotaLimitError(guestNatalChartError)) {
-      // TODO: возможно лучше выводить ошибку с бэка, с форматированным временем окончания лимита
+    if (isInsufficientFundsErrorLike(guestNatalChartError)) {
       await fetchingMessage.delete()
-      await ctx.reply(ctx.t('error-quota-limit'))
+      await ctx.reply(ctx.t('error-insufficient-funds'))
       return
     }
 
@@ -106,26 +104,6 @@ export class NatalChartsService {
     }
 
     return error.errors[0].additionalInfo.statusCode === NOT_FOUND_ERROR_INFO.code
-  }
-
-  private isQuotaLimitError(error: unknown): boolean {
-    if (!(error instanceof ApiDataError)) {
-      return false
-    }
-
-    return error.errors[0].additionalInfo.statusCode === FORBIDDEN_ERROR_INFO.code
-  }
-
-  private getQuotaLimitMessage(error: unknown): string | null {
-    if (!(error instanceof ApiDataError)) {
-      return null
-    }
-
-    if (!this.isQuotaLimitError(error)) {
-      return null
-    }
-
-    return error.errors[0].message
   }
 }
 

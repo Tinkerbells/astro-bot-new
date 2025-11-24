@@ -12,7 +12,13 @@ export type ApiErrorInfo = {
 }
 
 export class ApiDataError extends NetError<ApiErrorAdditionalInfo> {
-  constructor({ errors }: { errors: ApiErrorInfo[] }) {
+  constructor(
+    { errors }: { errors: ApiErrorInfo[] },
+    options?: { originalError?: Error },
+  ) {
     super({ errors })
+    this.originalError = options?.originalError
   }
+
+  originalError?: Error
 }

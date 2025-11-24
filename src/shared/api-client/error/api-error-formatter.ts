@@ -2,6 +2,8 @@ import type { HttpServiceError } from '#root/shared/http/index.js'
 
 import {
   BAD_REQUEST_ERROR_INFO,
+  INSUFFICIENT_FUNDS_CODE,
+  INSUFFICIENT_FUNDS_HTTP_CODE,
   INTERNAL_ERROR_INFO,
   NOT_FOUND_ERROR_INFO,
   UNAUTHORIZED_HTTP_INFO,
@@ -29,6 +31,20 @@ export function formatApiError(
   const status = error.response?.status ?? payload?.statusCode ?? 500
   const code = payload?.error ?? inferCodeByStatus(status)
 
+  if (status === INSUFFICIENT_FUNDS_HTTP_CODE) {
+    return new ApiDataError({
+      errors: [
+        {
+          message: payload?.message ?? INSUFFICIENT_FUNDS_CODE,
+          additionalInfo: {
+            statusCode: status,
+            code: payload?.error ?? INSUFFICIENT_FUNDS_CODE,
+          },
+        },
+      ],
+    })
+  }
+
   if (payload?.message) {
     return new ApiDataError({
       errors: [
@@ -54,6 +70,8 @@ export function formatApiError(
 
 function inferCodeByStatus(status: number): string {
   switch (status) {
+    case INSUFFICIENT_FUNDS_HTTP_CODE:
+      return INSUFFICIENT_FUNDS_CODE
     case 400:
       return 'BAD_REQUEST'
     case 401:
@@ -75,6 +93,7 @@ function fallbackMessageByCode(code: string, status: number): string {
     BAD_REQUEST: BAD_REQUEST_ERROR_INFO.message,
     NOT_FOUND: NOT_FOUND_ERROR_INFO.message,
     INTERNAL_ERROR: INTERNAL_ERROR_INFO.message,
+    [INSUFFICIENT_FUNDS_CODE]: INSUFFICIENT_FUNDS_CODE,
   }
 
   return map[code] ?? map[inferCodeByStatus(status)] ?? INTERNAL_ERROR_INFO.message

@@ -188,6 +188,7 @@ locale-code = ru-RU
 ## Errors
 
 error-quota-limit = ⚠️ Достигнут лимит запросов. Пожалуйста, попробуйте позже.
+error-insufficient-funds = Недостаточно монет. Пополните баланс и повторите попытку.
 
 ## Tarot Readings Feature
 

@@ -21,6 +21,10 @@ export function buildAscendantsMenuRange(
         const [error, data] = await safeAsync(ctx.ascendantsService.getUserAscendant(ctx))
         if (error) {
           await ctx.reply(ctx.t('errors-something-went-wrong'))
+          ctx.menu.back()
+        }
+        if (!data) {
+          ctx.menu.back()
         }
         if (!error && data) {
           ctx.safeEditMarkdownMessage(data)

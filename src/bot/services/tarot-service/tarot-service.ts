@@ -7,7 +7,7 @@ import { logger } from '#root/shared/logger.js'
 import { safeAsync } from '#root/shared/index.js'
 import { ApiDataError } from '#root/shared/api-client/error/index.js'
 import { tarotRepository } from '#root/data/repositories/tarot-repository/tarot-repository.js'
-import { BAD_REQUEST_ERROR_INFO, FORBIDDEN_ERROR_INFO, NOT_FOUND_ERROR_INFO } from '#root/shared/http/index.js'
+import { BAD_REQUEST_ERROR_INFO, isInsufficientFundsErrorLike } from '#root/shared/http/index.js'
 
 export class TarotService {
   constructor(
@@ -35,8 +35,8 @@ export class TarotService {
     if (error) {
       await fetchingMessage.delete()
 
-      if (this.isQuotaLimitError(error)) {
-        await ctx.reply(ctx.t('error-quota-limit'))
+      if (isInsufficientFundsErrorLike(error)) {
+        await ctx.reply(ctx.t('error-insufficient-funds'))
         return null
       }
 
@@ -238,22 +238,6 @@ export class TarotService {
     }
 
     return formattedMessageSent
-  }
-
-  private isNotFoundApiError(error: unknown): boolean {
-    if (!(error instanceof ApiDataError)) {
-      return false
-    }
-
-    return error.errors[0].additionalInfo.statusCode === NOT_FOUND_ERROR_INFO.code
-  }
-
-  private isQuotaLimitError(error: unknown): boolean {
-    if (!(error instanceof ApiDataError)) {
-      return false
-    }
-
-    return error.errors[0].additionalInfo.statusCode === FORBIDDEN_ERROR_INFO.code
   }
 
   private isBadRequestError(error: unknown): boolean {
