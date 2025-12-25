@@ -37,7 +37,7 @@ export async function buildCompatibilitiesListMenuRange(
               ctx.logger.error({ err: error })
             }
             if (result) {
-              await ctx.editMessageText(result, { parse_mode: 'HTML' })
+              await ctx.safeEditMarkdownMessage(result)
             }
           },
         )

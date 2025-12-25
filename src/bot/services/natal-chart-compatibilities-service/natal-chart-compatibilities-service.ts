@@ -19,7 +19,6 @@ export class CompatibilitiesService {
   public async replyWithUserGuestCompatibility(
     ctx: Context,
     dto: NatalChartCompatibilitiesRepositoryDTO.CreateCompatibilityUserGuestRequestDTO,
-    isOpen = false,
   ): Promise<void> {
     const fetchingMessage = await ctx.reply(ctx.t('fetching'), { reply_markup: { remove_keyboard: true } })
 
@@ -44,15 +43,20 @@ export class CompatibilitiesService {
       return
     }
 
-    const formattedInterpretation = this.formatInterpretation(ctx, compatibility.interpretation, isOpen)
-
-    await ctx.reply(formattedInterpretation, { parse_mode: 'HTML' })
+    const summary = compatibility.summary
+    if (!summary) {
+      await fetchingMessage.delete()
+      await ctx.reply(ctx.t('errors-something-went-wrong'))
+      return
+    }
+    ctx.session.lastCompatibilitySummary = summary
+    await fetchingMessage.delete()
+    await ctx.safeReplyMarkdown(summary, { reply_markup: { remove_keyboard: true } })
   }
 
   public async replyWithCompatibilityBySocialName(
     ctx: Context,
     dto: NatalChartCompatibilitiesRepositoryDTO.CreateCompatibilityBySocialNameRequestDTO,
-    isOpen = false,
   ): Promise<void> {
     const fetchingMessage = await ctx.reply(ctx.t('fetching'), { reply_markup: { remove_keyboard: true } })
 
@@ -83,54 +87,15 @@ export class CompatibilitiesService {
       return
     }
 
-    const formattedInterpretation = this.formatInterpretation(ctx, compatibility.interpretation, isOpen)
-
-    await ctx.reply(formattedInterpretation, { parse_mode: 'HTML' })
-  }
-
-  private formatInterpretation(
-    ctx: Context,
-    interpretation: NatalChartCompatibilitiesRepositoryDTO.NatalChartCompatibilityInterpretation,
-    isOpen: boolean,
-  ): string {
-    const lockedMessage = ctx.t('compatibilities-premium-section-locked')
-
-    const sections = [
-      this.formatSectionWithHeader(ctx, 'compatibilities-section-introduction', interpretation.introduction, false, isOpen, lockedMessage),
-      this.formatSectionWithHeader(ctx, 'compatibilities-section-profiles', interpretation.profiles, false, isOpen, lockedMessage),
-      this.formatSectionWithHeader(ctx, 'compatibilities-section-element-balance', interpretation.element_balance, false, isOpen, lockedMessage),
-      this.formatSectionWithHeader(ctx, 'compatibilities-section-tense-aspects', interpretation.tense_aspects, false, isOpen, lockedMessage),
-      this.formatSectionWithHeader(ctx, 'compatibilities-section-harmonious-aspects', interpretation.harmonious_aspects, false, isOpen, lockedMessage),
-      this.formatSectionWithHeader(ctx, 'compatibilities-section-house-overlays', interpretation.house_overlays, false, isOpen, lockedMessage),
-      this.formatSectionWithHeader(ctx, 'compatibilities-section-intimacy', interpretation.intimacy, true, isOpen, lockedMessage),
-      this.formatSectionWithHeader(ctx, 'compatibilities-section-finances', interpretation.finances, true, isOpen, lockedMessage),
-      this.formatSectionWithHeader(ctx, 'compatibilities-section-infidelity', interpretation.infidelity, true, isOpen, lockedMessage),
-      this.formatSectionWithHeader(ctx, 'compatibilities-section-composite-chart', interpretation.composite_chart, false, isOpen, lockedMessage),
-      this.formatSectionWithHeader(ctx, 'compatibilities-section-conclusions', interpretation.conclusions_and_recommendations, false, isOpen, lockedMessage),
-    ]
-
-    return sections.filter(section => section && section.trim()).join('\n\n')
-  }
-
-  private formatSectionWithHeader(
-    ctx: Context,
-    headerKey: string,
-    content: string,
-    isPremium: boolean,
-    isOpen: boolean,
-    lockedMessage: string,
-  ): string {
-    const header = `<b>${ctx.t(headerKey)}</b>`
-
-    if (!content || !content.trim()) {
-      return ''
+    const summary = compatibility.summary
+    if (!summary) {
+      await fetchingMessage.delete()
+      await ctx.reply(ctx.t('errors-something-went-wrong'))
+      return
     }
-
-    if (isPremium && !isOpen) {
-      return `${header}\n\n<tg-spoiler>${lockedMessage}</tg-spoiler>`
-    }
-
-    return `${header}\n\n${content}`
+    ctx.session.lastCompatibilitySummary = summary
+    await fetchingMessage.delete()
+    await ctx.safeReplyMarkdown(summary, { reply_markup: { remove_keyboard: true } })
   }
 
   private isNotFoundError(error: unknown): boolean {
@@ -154,26 +119,15 @@ export class CompatibilitiesService {
   }
 
   public async unlockFullCompatibility(ctx: Context): Promise<void> {
-    // TODO: Здесь нужно будет добавить проверку на оплату/подписку
-    // Пока что открываем полную версию для всех
+    const summary = ctx.session.lastCompatibilitySummary
 
-    const interpretation = ctx.session.lastCompatibilityInterpretation
-
-    if (!interpretation) {
+    if (!summary) {
       await ctx.answerCallbackQuery(ctx.t('errors-something-went-wrong'))
       return
     }
 
-    const formattedInterpretation = this.formatInterpretation(
-      ctx,
-      interpretation,
-      true, // isOpen = true для открытия полной версии
-    )
-
     try {
-      await ctx.editMessageText(formattedInterpretation, {
-        parse_mode: 'HTML',
-      })
+      await ctx.safeEditMarkdownMessage(summary)
       await ctx.answerCallbackQuery()
     }
     catch (error) {
@@ -201,11 +155,13 @@ export class CompatibilitiesService {
     return result.data
   }
 
-  public async getCompatibilityById(ctx: Context, id: string, isOpen = false) {
+  public async getCompatibilityById(ctx: Context, id: string) {
     const fetchingMessage = await ctx.reply(ctx.t('fetching'), { reply_markup: { remove_keyboard: true } })
 
+    const userId = Number(ctx.session.user.id)
+
     const [error, compatibility] = await safeAsync(
-      this.natalChartCompatibilitiesRepository.findById(id),
+      this.natalChartCompatibilitiesRepository.findById(id, userId),
     )
 
     if (error) {
@@ -223,9 +179,13 @@ export class CompatibilitiesService {
 
     await fetchingMessage.delete()
 
-    const formattedInterpretation = this.formatInterpretation(ctx, compatibility.interpretation, isOpen)
-
-    return formattedInterpretation
+    const summary = compatibility.summary
+    if (!summary) {
+      await ctx.reply(ctx.t('errors-something-went-wrong'))
+      return null
+    }
+    ctx.session.lastCompatibilitySummary = summary
+    return summary
   }
 }
 

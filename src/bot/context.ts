@@ -28,7 +28,7 @@ export type SessionData = {
   user: User
   onboarding: OnboardingState
   // TODO: посмотреть как лучше можно работать с этим
-  lastCompatibilityInterpretation?: NatalChartCompatibilitiesRepositoryDTO.NatalChartCompatibilityInterpretation
+  lastCompatibilitySummary?: string
   compatibilitiesList?: NatalChartCompatibilitiesRepositoryDTO.NatalChartCompatibilityDTO[]
   menus?: Record<string, MenuNavigationData>
   __language_code?: string

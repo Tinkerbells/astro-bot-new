@@ -6,36 +6,42 @@ export const natalChartCompatibilitiesNetworkSources = {
   createForUserWithGuest: (dto: NatalChartCompatibilitiesNetworkSourcesDTO.CreateCompatibilityUserGuestRequestDTO) => {
     const { userId, body } = dto
     return apiHttpClient.post<NatalChartCompatibilitiesNetworkSourcesDTO.NatalChartCompatibilityDTO>(
-      `/v1/natal-chart-compatibilities/user/${userId}/guest`,
+      '/v1/compatibilities/guest',
       body,
+      {
+        headers: { 'x-user-id': String(userId) },
+      },
     )
   },
 
   createBySocialName: (dto: NatalChartCompatibilitiesNetworkSourcesDTO.CreateCompatibilityBySocialNameRequestDTO) => {
     const { userId, body } = dto
     return apiHttpClient.post<NatalChartCompatibilitiesNetworkSourcesDTO.NatalChartCompatibilityDTO>(
-      `/v1/natal-chart-compatibilities/user/${userId}/by-social-name`,
+      '/v1/compatibilities/by-social-name',
       body,
+      {
+        headers: { 'x-user-id': String(userId) },
+      },
     )
   },
 
   findAllByUserId: (userId: number, query?: NatalChartCompatibilitiesNetworkSourcesDTO.FindAllCompatibilitiesQueryDTO) => {
-    const params = new URLSearchParams()
-    if (query?.page) {
-      params.append('page', String(query.page))
-    }
-    if (query?.limit) {
-      params.append('limit', String(query.limit))
-    }
-    const queryString = params.toString()
-    const url = `/v1/natal-chart-compatibilities/user/${userId}${queryString ? `?${queryString}` : ''}`
-
-    return apiHttpClient.get<NatalChartCompatibilitiesNetworkSourcesDTO.InfinityPaginationResultDTO<NatalChartCompatibilitiesNetworkSourcesDTO.NatalChartCompatibilityDTO>>(url)
+    return apiHttpClient.get<NatalChartCompatibilitiesNetworkSourcesDTO.InfinityPaginationResultDTO<NatalChartCompatibilitiesNetworkSourcesDTO.NatalChartCompatibilityDTO>>(
+      '/v1/compatibilities/user',
+      {
+        params: query,
+        headers: { 'x-user-id': String(userId) },
+      },
+    )
   },
 
-  findById: (id: string) => {
+  findById: (dto: NatalChartCompatibilitiesNetworkSourcesDTO.GetCompatibilityByIdDTO) => {
+    const { id, userId } = dto
     return apiHttpClient.get<NatalChartCompatibilitiesNetworkSourcesDTO.NatalChartCompatibilityDTO>(
-      `/v1/natal-chart-compatibilities/${id}`,
+      `/v1/compatibilities/${id}`,
+      userId
+        ? { headers: { 'x-user-id': String(userId) } }
+        : undefined,
     )
   },
 }

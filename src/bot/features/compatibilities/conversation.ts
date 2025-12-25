@@ -40,7 +40,8 @@ export async function compatibilitiesGuestConversation(
 
   await conversation.external(async (ctx) => {
     const user = ctx.session.user
-    const guestBirthDateTime = `${guestData.birthDate}T${guestData.birthTime}:00`
+    const birthTimePart = guestData.birthTime ? `${guestData.birthTime}:00` : '00:00:00'
+    const guestBirthDateTime = `${guestData.birthDate}T${birthTimePart}`
 
     const userName = user.firstName || user.lastName || 'Вы'
 

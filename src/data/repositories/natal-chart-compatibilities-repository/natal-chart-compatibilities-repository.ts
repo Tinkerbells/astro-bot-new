@@ -22,8 +22,8 @@ export class NatalChartCompatibilitiesRepository {
     return data.data
   }
 
-  public async findById(id: string): Promise<NatalChartCompatibilitiesRepositoryDTO.NatalChartCompatibilityDTO> {
-    const data = await this.natalChartCompatibilitiesNetworkSources.findById(id)
+  public async findById(id: string, userId?: number): Promise<NatalChartCompatibilitiesRepositoryDTO.NatalChartCompatibilityDTO> {
+    const data = await this.natalChartCompatibilitiesNetworkSources.findById({ id, userId })
     return data.data
   }
 }
