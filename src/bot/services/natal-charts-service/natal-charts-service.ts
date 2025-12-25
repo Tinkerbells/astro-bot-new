@@ -32,7 +32,7 @@ export class NatalChartsService {
 
     if (userNatalChart) {
       await fetchingMessage.delete()
-      return userNatalChart.interpretation
+      return userNatalChart.summary
     }
 
     const [generateForUserError, generatedUserNatalChart] = await safeAsync(this.natalChartsRepository.generateForUser({ userId: Number(user.id) }))
@@ -56,19 +56,19 @@ export class NatalChartsService {
     }
 
     await fetchingMessage.delete()
-    return generatedUserNatalChart.interpretation
+    return generatedUserNatalChart.summary
   }
 
   public async replyWithUserNatalChart(
     ctx: Context,
   ) {
-    const interpretation = await this.getUserNatalChart(ctx)
+    const summary = await this.getUserNatalChart(ctx)
 
-    if (!interpretation) {
+    if (!summary) {
       return
     }
 
-    await ctx.safeReplyMarkdown(interpretation)
+    await ctx.safeReplyMarkdown(summary)
   }
 
   // TODO: полностью неправильно, нужно отдельно брать информацию про guest пользователя, а не исползовать ctx.session.user
@@ -95,7 +95,8 @@ export class NatalChartsService {
       return
     }
 
-    await ctx.safeReplyMarkdown(guestNatalChart.interpretation, { reply_markup: { remove_keyboard: true } })
+    await fetchingMessage.delete()
+    await ctx.safeReplyMarkdown(guestNatalChart.summary, { reply_markup: { remove_keyboard: true } })
   }
 
   private isNotFoundApiError(error: unknown): boolean {

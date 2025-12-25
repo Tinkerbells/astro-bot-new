@@ -39,12 +39,13 @@ export async function natalChartsGuestConversation(
   }, handleCancel)
 
   await conversation.external(async (ctx) => {
-    const birthDateTime = `${data.birthDate}T${data.birthTime}:00`
     const dto = {
       userId: Number(ctx.session.user.id),
-      birthDateTime,
+      birthDate: data.birthDate,
+      birthTime: data.birthTime ?? null,
       latitude: data.birthPlace.latitude,
       longitude: data.birthPlace.longitude,
+      timezone: data.birthPlace.timezone,
     }
     await ctx.natalChartsService.replyWithGuestNatalChart(ctx, dto)
   })
